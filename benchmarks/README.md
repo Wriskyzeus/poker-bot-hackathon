@@ -24,8 +24,12 @@ python benchmarks/paired_eval.py my_bots/uo_monte bots/caller --seeds 1-50 --job
 # See the commands without running anything
 python benchmarks/paired_eval.py bots/caller bots/template --seeds 41-43 --dry-run
 
+# Re-score an archived matches.csv without playing anything (typed and validated)
+python benchmarks/paired_eval.py --rescore benchmarks/results/caller_vs_template/matches.csv
+
 # Self-tests
 python tests/test_paired_eval.py -v
+python tests/test_benchmark_opponents.py -v
 ```
 
 Options: `--seeds 41-43,50`, `--blinds` (default `standard`), `--stack` (default
@@ -61,20 +65,32 @@ Example `matches.csv` row (shortened):
 For one seed, A plays seat 0 in match 1 and seat 1 in match 2.
 
 - A wins both: pair **W**. A wins one each: pair **D**. A wins neither: pair **L**.
-- If either match is incomplete (timeout, hand limit, crash, missing result),
-  the pair is **incomplete** and is excluded, never guessed.
+- If either match is not `ok` (timeout, hand limit, **nonzero runner exit code**,
+  missing or inconsistent log), the pair is **incomplete** and is excluded, never guessed.
+- Match status is `ok`, `incomplete:<reason>` or `error:exit_code=N`. A match is `ok` only
+  if `play.py` exited 0 and its log is self-consistent (seed matches, both seats present,
+  places are 1 and 2, the two final stacks add up to twice the starting stack, loser has 0).
+  Any `error:` or `incomplete:` match is listed in the report and excluded from win rates.
 - "Pair score" = (W + 0.5 D) / complete pairs. This is **our summary
   convention**; the organizer's rules define win/draw per pairing but the
   source does not say how draws are weighted in the final ranking.
 
 ## Uncertainty
 
-- Single-match win rates: 95% Wilson interval.
-- Pair score: 95% percentile bootstrap over pairs (2000 resamples, fixed RNG seed).
-- Assumptions: seeds are independent and identically distributed; the Wilson
-  interval treats the two matches of a seed as independent, which is
-  conservative. With few seeds the intervals are very wide. Roughly 330 matches
+- The two matches of a seed share the same cards, so they are **not independent**.
+  Every interval therefore resamples **whole seeds** (pairs) with replacement.
+- Match win rates (overall and per seat): percentile **cluster bootstrap over seeds**,
+  2000 resamples, fixed RNG seed. Pair score: percentile bootstrap over pairs.
+- Wilson intervals assume independent trials, so they are not used for match rates.
+  They are not "conservative" in general: if every seed splits one win each, the cluster
+  interval is narrower than Wilson; if both matches of a seed always agree, it is wider
+  (both cases are tested).
+- With fewer than 20 complete pairs, or when every pair has the same result, the report
+  prints a WARNING: a 0%-0% interval from 3 seeds is not certainty. Roughly 330 matches
   per version are needed to tell 65% from 75%.
+- **Team pair score** = (W + 0.5 D) / pairs is our own comparison convention. The
+  organiser's rule only defines a win/draw/loss per pairing; how draws are weighted in the
+  final ranking is not stated in the source. Do not quote it as the organiser's score.
 
 ## Limitations
 
@@ -84,6 +100,11 @@ For one seed, A plays seat 0 in match 1 and seat 1 in match 2.
   p95 is **not available**; those fields are marked unavailable in the manifest.
 - Winner is taken from the engine's `place` field when a match ends with
   `one_player_left`. Matches stopped any other way are marked incomplete.
+- A nonzero exit code excludes a match even if its log finished. `play.py` exits 1 when a
+  bot raised an error (the bot just folded that hand), so a bot with a harmless caught
+  exception shows up as `error:exit_code=1`. That is deliberate: errors must be seen and
+  fixed, and the count is printed in every report.
+- The rescore checks types and consistency of the CSV, not that the matches really happened.
 - Matches run through the host Python by default, not the competition container.
 - Bots that use their own randomness may not replay identically, even with the
   same seed. The engine seeds each bot, but time-based behavior can vary.
@@ -101,3 +122,23 @@ container. To check timing under those limits: build the sandbox with
 Copy the older bot folder (e.g. `my_bots/uo_monte_v32/`), then run the harness
 with A = new, B = old on the same seeds. The pair score and W/D/L answer "is the
 new version better on identical deals?", which a total win rate cannot do.
+
+## Practice opponents (benchmark-only, `benchmarks/opponents/`)
+
+Two original, deterministic toy bots for testing exploitation logic. They live outside
+`my_bots/uo_monte/`, use only public state and legal actions, have no randomness, and
+pass `python pokercore/validator.py <folder>`. All tunable numbers are in each file's
+`PARAMS` dictionary. Each folder is self-contained.
+
+| Bot | Behaviour | Tests |
+|---|---|---|
+| `overfolder` | Opens only decent hands; postflop folds everything below two pair to any bet of 25% pot or more, calls small bets with any pair, bets only top pair or better. | Fold-equity gains, and whether a bluff-happy bot wastes chips against a caller-like range. |
+| `trapper` | Never bluffs. Limps premium hands, checks and calls strong hands on the flop, then check-raises 3x on the turn and bets 90% pot on the river; re-raises preflop raises. | Whether semi-bluffs and thin value bets are punished, and check-raise losses. |
+
+They are **toys**. Real opponents do not fold or slowplay this uniformly, so results against
+them say nothing about tournament win probability. Keep tuning data and holdout data apart.
+
+```bash
+python benchmarks/paired_eval.py my_bots/uo_monte benchmarks/opponents/overfolder --seeds 101-120
+python benchmarks/paired_eval.py my_bots/uo_monte benchmarks/opponents/trapper --seeds 101-120
+```

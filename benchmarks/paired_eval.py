@@ -67,13 +67,32 @@ UNAVAILABLE_FIELDS = [
 ]
 
 ASSUMPTIONS = [
-    "Pairs (one per seed) are treated as independent and identically distributed.",
-    "Match win-rate intervals are Wilson 95% intervals and treat the two matches of a seed as independent, "
-    "which slightly understates the benefit of duplicate play; they are conservative for head-to-head totals.",
-    "Pair-score intervals are percentile bootstrap (2000 resamples, fixed RNG seed) over pairs.",
-    "Pair score = (wins + 0.5 x draws) / pairs is OUR summary convention. The organiser's rule defines win/draw "
-    "per pairing but the source does not say how draws are weighted in the final ranking.",
+    "Seeds are the unit of analysis: the two matches of one seed share the same cards, so they are NOT "
+    "independent. Every interval resamples whole seeds (pairs) with replacement and treats different seeds as "
+    "independent and identically distributed.",
+    "Match win-rate intervals (overall and per seat) are percentile cluster-bootstrap intervals over pairs "
+    "(2000 resamples, fixed RNG seed). No claim is made that they are conservative or anti-conservative; "
+    "they are only as good as the i.i.d.-seeds assumption.",
+    "Pair-score intervals are percentile bootstrap over pairs with the same settings. With fewer than "
+    "20 pairs, or when every pair has the same outcome, the interval is degenerate or unreliable and is flagged.",
+    "Only matches with status 'ok' are scored. A nonzero play.py exit code (status 'error:exit_code=N'), an "
+    "inconsistent log or a missing match_end makes the match, and therefore its pair, excluded and visible.",
+    "Team pair score = (wins + 0.5 x draws) / pairs is OUR comparison convention. The organiser's documented "
+    "rule only defines a win/draw/loss per pairing; how draws are weighted in the final ranking is not stated "
+    "in the source, so this number is not the organiser's ranking score.",
 ]
+
+MIN_PAIRS_FOR_CI = 20
+
+# Typed columns, used when archived matches.csv files are loaded back.
+INT_COLUMNS = {
+    "seed", "a_seat", "starting_stack", "hands", "a_final_stack", "b_final_stack",
+    "a_decisions", "b_decisions", "a_timeouts", "b_timeouts", "a_errors", "b_errors",
+    "a_restarts", "b_restarts", "exit_code",
+}
+FLOAT_COLUMNS = {"a_avg_think_ms", "b_avg_think_ms", "a_max_think_ms", "b_max_think_ms", "duration_s"}
+BOOL_COLUMNS = {"a_disabled", "b_disabled"}
+REQUIRED_COLUMNS = {"seed", "a_seat", "bot_a", "bot_b", "status", "winner"}
 
 
 # --------------------------------------------------------------------------- #
@@ -154,9 +173,25 @@ def _blank_record():
     return {col: "" for col in CSV_COLUMNS}
 
 
+def _as_int(value):
+    """int(value) for ints and integral numbers; None for anything else (bool excluded)."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return None
+
+
 def make_record(item, command_text, blinds, stack, bot_a, bot_b,
                 start, end, exit_code, wall_s, note=""):
-    """Build one CSV row from a parsed log. Never raises on missing data."""
+    """Build one CSV row from a parsed log. Never raises on missing data.
+
+    Status is 'ok' only when the process exited 0 AND the log is complete and
+    self-consistent. Otherwise it is 'incomplete:<why>' or 'error:exit_code=N';
+    those matches are excluded from scoring but stay visible in every report.
+    """
     rec = _blank_record()
     rec.update({
         "seed": item["seed"], "a_seat": 0 if item["order"] == 1 else 1,
@@ -168,33 +203,60 @@ def make_record(item, command_text, blinds, stack, bot_a, bot_b,
     if note:
         rec["status"] = f"incomplete:{note}"
         return rec
+
+    problem = ""
+    if exit_code not in ("", 0):
+        problem = f"error:exit_code={exit_code}"
     if not start or not end:
-        rec["status"] = "incomplete:no_match_end"
+        rec["status"] = problem or "incomplete:no_match_end"
         return rec
 
     seats = start.get("seats") or []
     names = [s.get("name") for s in seats]
-    if len(names) != 2:
-        rec["status"] = "incomplete:expected_two_seats"
+    if len(names) != 2 or names[0] == names[1] or None in names:
+        rec["status"] = problem or "incomplete:expected_two_distinct_seats"
         return rec
     role_of_seat = ["A", "B"] if item["order"] == 1 else ["B", "A"]
 
     rec["stopped"] = end.get("stopped", "")
     rec["hands"] = end.get("hands", "")
-    winner = ""
+    winner, places, stacks, seen = "", [], [], set()
     for result in end.get("results") or []:
         if result.get("bot") not in names:
             continue
+        seen.add(result["bot"])
         role = role_of_seat[names.index(result["bot"])]
         prefix = role.lower() + "_"
         rec[prefix + "final_stack"] = result.get("final_stack", "")
+        stacks.append(result.get("final_stack"))
+        places.append(result.get("place"))
         for key in ("decisions", "timeouts", "errors", "restarts", "avg_think_ms", "max_think_ms"):
             value = result.get(key)
             rec[prefix + key] = "" if value is None else value
         rec[prefix + "disabled"] = "" if result.get("disabled") is None else result.get("disabled")
         if result.get("place") == 1:
             winner = role
-    if rec["stopped"] != "one_player_left":
+
+    inconsistent = ""
+    logged_seed = start.get("seed")
+    if logged_seed is not None and _as_int(logged_seed) != item["seed"]:
+        inconsistent = "seed_mismatch"
+    elif seen != set(names) or len(stacks) != 2:
+        inconsistent = "results_do_not_match_seats"
+    elif any(_as_int(x) is None for x in stacks) or _as_int(end.get("hands")) is None:
+        inconsistent = "non_numeric_fields"
+    elif sum(_as_int(x) for x in stacks) != 2 * _as_int(stack):
+        inconsistent = "chips_not_conserved"      # freezeout: the two stacks must add to 2 x start
+    elif rec["stopped"] == "one_player_left" and sorted(places) != [1, 2]:
+        inconsistent = "places_not_1_and_2"
+    elif rec["stopped"] == "one_player_left" and min(_as_int(x) for x in stacks) != 0:
+        inconsistent = "loser_has_chips"
+
+    if problem:
+        rec["status"] = problem
+    elif inconsistent:
+        rec["status"] = f"incomplete:inconsistent_log:{inconsistent}"
+    elif rec["stopped"] != "one_player_left":
         rec["status"] = f"incomplete:stopped={rec['stopped']}"
     elif winner not in ("A", "B"):
         rec["status"] = "incomplete:no_winner"
@@ -250,22 +312,45 @@ def score_pair(winner_order1, winner_order2):
     return {2: "W", 1: "D", 0: "L"}[a_wins]
 
 
+def _typed_key(rec):
+    """(seed, order) with strict typing. Accepts ints or digit strings (raw csv rows), never guesses."""
+    try:
+        seed = int(rec["seed"])
+        seat = int(rec["a_seat"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError(f"record has unusable seed/a_seat: {rec.get('seed')!r}/{rec.get('a_seat')!r}") from None
+    if seat not in (0, 1):
+        raise ValueError(f"a_seat must be 0 or 1, got {seat} (seed {seed})")
+    return seed, (1 if seat == 0 else 2)
+
+
 def build_pairs(records):
-    """Group records by seed -> {seed: outcome}. A seed missing a match is incomplete."""
+    """Group records by seed -> {seed: outcome}. A seed missing a match is incomplete.
+
+    Seats are converted to integers first (a raw csv string '0' would otherwise
+    never equal 0 and silently scramble pairs). Two rows for the same seed and
+    seat raise instead of one overwriting the other. Only status 'ok' rows count."""
     by_seed = {}
     for rec in records:
-        by_seed.setdefault(rec["seed"], {})[1 if rec["a_seat"] == 0 else 2] = rec
+        seed, order = _typed_key(rec)
+        slot = by_seed.setdefault(seed, {})
+        if order in slot:
+            raise ValueError(f"duplicate record for seed {seed}, a_seat {0 if order == 1 else 1}")
+        slot[order] = rec
     pairs = {}
     for seed in sorted(by_seed):
         pair = by_seed[seed]
-        w1 = pair.get(1, {}).get("winner", "")
-        w2 = pair.get(2, {}).get("winner", "")
-        pairs[seed] = score_pair(w1, w2)
+        winners = [(pair[o].get("winner", "") if o in pair and pair[o].get("status") == "ok" else "")
+                   for o in (1, 2)]
+        pairs[seed] = score_pair(*winners)
     return pairs
 
 
 def wilson_interval(k, n, z=1.96):
-    """Wilson score interval for a proportion. n == 0 gives the vacuous (0, 1)."""
+    """Wilson score interval for a proportion of INDEPENDENT trials. n == 0 gives (0, 1).
+
+    Not used for match win rates: the two matches of a seed are correlated, so those
+    use cluster_bootstrap_rate. Kept as a utility for independent counts."""
     if n == 0:
         return (0.0, 1.0)
     p = k / n
@@ -287,13 +372,52 @@ def bootstrap_mean_ci(values, reps=2000, seed=12345, alpha=0.05):
     return (lo, hi)
 
 
-def _rate(k, n):
-    lo, hi = wilson_interval(k, n)
-    return {"wins": k, "n": n, "rate": (k / n) if n else None, "ci95": [lo, hi]}
+def cluster_bootstrap_rate(clusters, reps=2000, seed=12345, alpha=0.05):
+    """Percentile bootstrap CI for a pooled win rate, resampling whole seeds.
+
+    clusters: one (wins, matches) tuple per seed. The two matches of a seed share
+    the same cards, so the seed, not the match, is the independent unit."""
+    clusters = [c for c in clusters if c[1] > 0]
+    if not clusters:
+        return None
+    rng = random.Random(seed)
+    n = len(clusters)
+    rates = []
+    for _ in range(reps):
+        wins = games = 0
+        for _ in range(n):
+            w, g = clusters[rng.randrange(n)]
+            wins += w
+            games += g
+        rates.append(wins / games)
+    rates.sort()
+    return (rates[int((alpha / 2) * reps)], rates[min(reps - 1, int((1 - alpha / 2) * reps) - 1)])
+
+
+def _rate(clusters):
+    wins = sum(c[0] for c in clusters)
+    n = sum(c[1] for c in clusters)
+    ci = cluster_bootstrap_rate(clusters)
+    return {"wins": wins, "n": n, "seeds": sum(1 for c in clusters if c[1] > 0),
+            "rate": (wins / n) if n else None, "ci95": list(ci) if ci else None,
+            "ci_method": "cluster bootstrap over seeds"}
+
+
+def _clusters(records, want_seat=None):
+    """(A wins, complete matches) per seed, optionally for one seat only."""
+    per_seed = {}
+    for r in records:
+        if r["status"] != "ok":
+            continue
+        if want_seat is not None and int(r["a_seat"]) != want_seat:
+            continue
+        w, g = per_seed.get(int(r["seed"]), (0, 0))
+        per_seed[int(r["seed"])] = (w + (r["winner"] == "A"), g + 1)
+    return [per_seed[k] for k in sorted(per_seed)]
 
 
 def summarize(records):
-    """All headline numbers. Only complete matches count toward win rates."""
+    """All headline numbers. Only complete matches ('ok') count toward win rates."""
     complete = [r for r in records if r["status"] == "ok"]
     pairs = build_pairs(records)
     wdl = {"W": 0, "D": 0, "L": 0}
@@ -302,9 +426,11 @@ def summarize(records):
             wdl[outcome] += 1
     scored = [{"W": 1.0, "D": 0.5, "L": 0.0}[o] for o in pairs.values() if o in wdl]
     ci = bootstrap_mean_ci(scored)
-    a_wins = sum(r["winner"] == "A" for r in complete)
-    first = [r for r in complete if r["a_seat"] == 0]
-    second = [r for r in complete if r["a_seat"] == 1]
+    ci_note = ""
+    if scored and len(scored) < MIN_PAIRS_FOR_CI:
+        ci_note = f"fewer than {MIN_PAIRS_FOR_CI} complete pairs: interval is unreliable"
+    elif ci and ci[0] == ci[1]:
+        ci_note = "all pairs identical: interval is degenerate, not proof of certainty"
     problems = {"timeouts": 0, "errors": 0, "restarts": 0}
     for rec in records:
         for key in problems:
@@ -318,12 +444,14 @@ def summarize(records):
         "pair_wdl_for_A": wdl,
         "pair_score_for_A": (sum(scored) / len(scored)) if scored else None,
         "pair_score_ci95": list(ci) if ci else None,
+        "pair_score_ci_note": ci_note,
         "matches_total": len(records),
         "matches_complete": len(complete),
         "matches_incomplete": len(records) - len(complete),
-        "match_wins_A": _rate(a_wins, len(complete)),
-        "A_in_first_seat": _rate(sum(r["winner"] == "A" for r in first), len(first)),
-        "A_in_second_seat": _rate(sum(r["winner"] == "A" for r in second), len(second)),
+        "matches_error": sum(r["status"].startswith("error") for r in records),
+        "match_wins_A": _rate(_clusters(records)),
+        "A_in_first_seat": _rate(_clusters(records, 0)),
+        "A_in_second_seat": _rate(_clusters(records, 1)),
         "problem_counts_both_bots": problems,
         "incomplete_reasons": sorted({r["status"] for r in records if r["status"] != "ok"}),
     }
@@ -363,6 +491,62 @@ def deterministic_digest(records):
     return hashlib.sha256(csv_text(records, columns).encode()).hexdigest()
 
 
+def _convert_cell(column, text, line_no):
+    if text == "":
+        return ""
+    try:
+        if column in INT_COLUMNS:
+            return int(text)
+        if column in FLOAT_COLUMNS:
+            return float(text)
+    except ValueError:
+        raise ValueError(f"line {line_no}: column {column!r} expects a number, got {text!r}") from None
+    if column in BOOL_COLUMNS:
+        if text not in ("true", "false"):
+            raise ValueError(f"line {line_no}: column {column!r} expects true/false, got {text!r}")
+        return text == "true"
+    return text
+
+
+def load_records_csv(text):
+    """Parse an archived matches.csv back into typed records, validating as it goes.
+
+    seed and a_seat become ints (raw csv strings would scramble the pairing),
+    numeric and boolean columns are converted, and obviously corrupt rows raise
+    ValueError with a line number instead of producing a quietly wrong score."""
+    import io
+    reader = csv.DictReader(io.StringIO(text))
+    missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+    if missing:
+        raise ValueError(f"matches.csv is missing columns: {sorted(missing)}")
+    records, seen, bots = [], set(), set()
+    for line_no, row in enumerate(reader, start=2):
+        rec = _blank_record()
+        for column in CSV_COLUMNS:
+            if column in row and row[column] is not None:
+                rec[column] = _convert_cell(column, row[column], line_no)
+        if not isinstance(rec["seed"], int) or rec["a_seat"] not in (0, 1):
+            raise ValueError(f"line {line_no}: seed must be an integer and a_seat 0 or 1")
+        status = rec["status"]
+        if not (status == "ok" or status.startswith("incomplete") or status.startswith("error")):
+            raise ValueError(f"line {line_no}: unknown status {status!r}")
+        if status == "ok" and rec["winner"] not in ("A", "B"):
+            raise ValueError(f"line {line_no}: status ok needs winner A or B")
+        if status != "ok" and rec["winner"] != "":
+            raise ValueError(f"line {line_no}: a non-ok match must not carry a winner")
+        key = (rec["seed"], rec["a_seat"])
+        if key in seen:
+            raise ValueError(f"line {line_no}: duplicate row for seed {key[0]}, a_seat {key[1]}")
+        seen.add(key)
+        bots.add((rec["bot_a"], rec["bot_b"]))
+        records.append(rec)
+    if not records:
+        raise ValueError("matches.csv has no rows")
+    if len(bots) != 1:
+        raise ValueError(f"rows mix different bot pairs: {sorted(bots)}")
+    return records
+
+
 def pairs_text(records):
     import io
     buf = io.StringIO()
@@ -378,9 +562,11 @@ def _pct(x):
 
 
 def _rate_line(label, block):
+    if not block["ci95"]:
+        return f"  {label:<22} {block['wins']}/{block['n']}  n/a"
     lo, hi = block["ci95"]
     return (f"  {label:<22} {block['wins']}/{block['n']}  {_pct(block['rate'])}"
-            f"  (95% Wilson {100 * lo:.1f}%-{100 * hi:.1f}%)")
+            f"  (95% cluster bootstrap over seeds {100 * lo:.1f}%-{100 * hi:.1f}%)")
 
 
 def format_report(summary, bot_a, bot_b):
@@ -392,17 +578,24 @@ def format_report(summary, bot_a, bot_b):
     if summary["pair_score_for_A"] is not None and summary["pair_score_ci95"]:
         lo, hi = summary["pair_score_ci95"]
         lines.append(f"  pair score {summary['pair_score_for_A']:.3f} "
-                     f"(bootstrap 95% {lo:.3f}-{hi:.3f}; 0.5 = even)")
+                     f"(bootstrap over pairs, 95% {lo:.3f}-{hi:.3f}; 0.5 = even; "
+                     "team convention W+0.5D, not the organiser's ranking rule)")
+        if summary["pair_score_ci_note"]:
+            lines.append(f"  WARNING: {summary['pair_score_ci_note']}")
     lines += ["", f"Single matches ({summary['matches_complete']} complete of {summary['matches_total']})",
               _rate_line("A wins, overall", summary["match_wins_A"]),
               _rate_line("A wins, seat 0", summary["A_in_first_seat"]),
               _rate_line("A wins, seat 1", summary["A_in_second_seat"])]
+    if summary["matches_error"]:
+        lines.append(f"  {summary['matches_error']} match(es) had a nonzero runner exit code: "
+                     "excluded from win rates and their pairs are incomplete")
     problems = summary["problem_counts_both_bots"]
     lines += ["", f"Runner-reported problems (both bots): {problems['timeouts']} timeouts, "
                   f"{problems['errors']} errors, {problems['restarts']} restarts"]
     if summary["incomplete_reasons"]:
         lines.append("Incomplete matches: " + ", ".join(summary["incomplete_reasons"]))
-    lines += ["", "Small samples give wide intervals; see benchmarks/README.md."]
+    lines += ["", "Intervals resample whole seeds; small samples give wide or unreliable intervals. "
+                  "See benchmarks/README.md."]
     return "\n".join(lines) + "\n"
 
 
@@ -452,9 +645,11 @@ def build_manifest(args, settings, records, summary):
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("bot_a", help="first bot (folder, bot.py or .zip); results are reported from A's view")
-    p.add_argument("bot_b", help="second bot")
-    p.add_argument("--seeds", required=True, help="e.g. 41-43 or 41,42,50-55")
+    p.add_argument("bot_a", nargs="?", help="first bot (folder, bot.py or .zip); results are reported from A's view")
+    p.add_argument("bot_b", nargs="?", help="second bot")
+    p.add_argument("--seeds", default=None, help="e.g. 41-43 or 41,42,50-55 (required unless --rescore)")
+    p.add_argument("--rescore", metavar="MATCHES_CSV", default=None,
+                   help="re-score an archived matches.csv without playing anything")
     p.add_argument("--blinds", default="standard", help="standard (default), turbo, slow, or flat like 50/100")
     p.add_argument("--stack", type=int, default=10_000, help="starting stack (default 10000)")
     p.add_argument("--hands-cap", type=int, default=None, help="safety cap on hands per match (play.py default 2000)")
@@ -471,9 +666,34 @@ def parse_args(argv=None):
     return p.parse_args(argv)
 
 
+def rescore(args):
+    """Load an archived matches.csv, validate it and print the same report. Plays nothing."""
+    try:
+        records = sorted_records(load_records_csv(Path(args.rescore).read_text()))
+        summary = summarize(records)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    report = format_report(summary, records[0]["bot_a"], records[0]["bot_b"])
+    print(report)
+    print(f"Deterministic digest: {deterministic_digest(records)}")
+    if args.out_dir:
+        out_dir = Path(args.out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "pairs.csv").write_text(pairs_text(records))
+        (out_dir / "summary.txt").write_text(report)
+        print(f"Wrote pairs.csv and summary.txt to {out_dir}")
+    return 0 if summary["matches_incomplete"] == 0 else 2
+
+
 def main(argv=None):
     args = parse_args(argv)
     repo_root = Path(__file__).resolve().parents[1]
+    if args.rescore:
+        return rescore(args)
+    if not (args.bot_a and args.bot_b and args.seeds):
+        print("error: give bot_a, bot_b and --seeds (or use --rescore MATCHES_CSV)", file=sys.stderr)
+        return 2
     try:
         seeds = parse_seeds(args.seeds, args.allow_sealed)
     except ValueError as exc:
