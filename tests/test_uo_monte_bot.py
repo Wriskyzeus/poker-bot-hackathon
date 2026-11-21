@@ -4,6 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import eval7
+
 
 BOT_PATH = Path(__file__).parents[1] / "my_bots" / "uo_monte" / "bot.py"
 SPEC = importlib.util.spec_from_file_location("uo_monte_bot", BOT_PATH)
@@ -162,6 +164,88 @@ class RiverDefenseTests(unittest.TestCase):
         with patch.object(BOT, "estimate_equity", return_value=0.90):
             action = BOT.decide(self.river(owed=0, can_check=True))
         self.assertEqual(action, {"action": "raise", "amount": 660})
+
+
+class StackCommitmentTests(unittest.TestCase):
+    def facing(self, **overrides):
+        values = {
+            "street": "flop", "hand_num": 20, "your_cards": ["7h", "Ah"],
+            "community_cards": ["Ad", "5s", "Qd"],
+            "pot": 1740, "amount_owed": 640, "current_bet": 940,
+            "your_bet_this_street": 300, "min_raise_to": 1580, "your_stack": 9280,
+            "players": [{"bot_id": "me", "stack": 9280},
+                        {"bot_id": "opponent", "stack": 8980}],
+            "action_log": [{"bot_id": bot, "street": "flop", "action": "raise", "amount": amount}
+                           for bot, amount in (("me", 300), ("opponent", 940))],
+        }
+        values.update(overrides)
+        return state(**values)
+
+    def test_made_hand_classes_distinguish_hole_card_strength(self):
+        for hole, board, expected in (
+            ("Ah 7h", "Ad 5s Qd", "top pair"),
+            ("As Ac", "Kd 5s Qd", "overpair"),
+            ("Ah Qh", "Ad 5s Qd", "two pair"),
+            ("Ah Ad", "Ac 5s Qd", "set"),
+            ("Ah 7h", "Ad Ac Qd", "trips"),
+            ("Ah 7h", "Ad 5s 5d", "top pair"),
+            ("8h 9h", "Td Js Qd", "straight"),
+            ("Ah 7h", "Jh 5h Qh", "flush"),
+        ):
+            with self.subTest(hole=hole, board=board):
+                cards = hole.split() + board.split()
+                score = eval7.evaluate([eval7.Card(card) for card in cards])
+                self.assertEqual(BOT._commitment_hand(hole.split(), board.split(), score), expected)
+
+    def test_live_draw_requires_a_hole_card_contribution(self):
+        self.assertTrue(BOT._live_draw(["Ah", "7h"], ["Jh", "5h", "Qc"]))
+        self.assertTrue(BOT._live_draw(["8h", "9h"], ["Td", "Js", "2c"]))
+        self.assertFalse(BOT._live_draw(["Ah", "2c"], ["5d", "6d", "7d", "8d"]))
+
+    def test_original_deep_top_pair_reraise_turns_into_a_call(self):
+        self.assertEqual(BOT.decide(self.facing()), {"action": "call"})
+
+    def test_set_can_reraise_for_value(self):
+        self.assertEqual(BOT.decide(self.facing(your_cards=["5h", "5c"])),
+                         {"action": "raise", "amount": 1580})
+
+    def test_low_effective_spr_allows_top_pair_value_raise(self):
+        state = self.facing(your_cards=["Ah", "Kh"], your_bet_this_street=0, pot=2300,
+                            amount_owed=400, current_bet=400, min_raise_to=800,
+                            action_log=[{"bot_id": "opponent", "street": "flop", "action": "raise"}],
+                            players=[{"bot_id": "me", "stack": 9280},
+                                     {"bot_id": "opponent", "stack": 500}])
+        with patch.object(BOT, "_commitment_equity", return_value=(0.72, 0.65)):
+            self.assertEqual(BOT.decide(state), {"action": "raise", "amount": 900})
+
+    def test_historical_aggression_keeps_a_borderline_bluff_catcher(self):
+        def history(action):
+            return [{"bot_id": "opponent", "hand_num": hand, "street": street, "action": action}
+                    for hand in range(16) for street in ("flop", "turn", "river")]
+
+        state = self.facing(pot=1300, amount_owed=640, your_stack=750,
+                            players=[{"bot_id": "me", "stack": 750},
+                                     {"bot_id": "opponent", "stack": 110}])
+        with patch.object(BOT, "_commitment_equity", return_value=(0.43, 0.32)):
+            self.assertEqual(BOT.decide(dict(state, match_action_log=history("check"))),
+                             {"action": "fold"})
+            self.assertEqual(BOT.decide(dict(state, match_action_log=history("raise"))),
+                             {"action": "call"})
+
+    def test_covered_weak_hand_can_fold_and_strong_hand_calls(self):
+        state = self.facing(your_stack=640)
+        self.assertEqual(BOT.decide(dict(state, your_cards=["2h", "7c"])), {"action": "fold"})
+        self.assertEqual(BOT.decide(dict(state, your_cards=["5h", "5c"])), {"action": "call"})
+
+    def test_value_raise_with_a_short_hero_stack_is_a_legal_all_in(self):
+        state = self.facing(your_stack=900, your_cards=["5h", "5c"])
+        self.assertEqual(BOT.decide(state), {"action": "all_in"})
+
+    def test_value_hand_calls_when_the_only_opponent_is_already_all_in(self):
+        state = self.facing(your_cards=["5h", "5c"],
+                            players=[{"bot_id": "me", "stack": 9280},
+                                     {"bot_id": "opponent", "stack": 0}])
+        self.assertEqual(BOT.decide(state), {"action": "call"})
 
 
 class EquityTests(unittest.TestCase):

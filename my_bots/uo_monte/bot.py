@@ -1,4 +1,4 @@
-"""UO-Monte 3.1: preflop ranges, postflop equity, and river defense.
+"""UO-Monte 3.2: preflop ranges, stack-aware postflop play, and river defense.
 
 The ranges are coarse heuristics, not a solved/GTO chart.  They trade mixed
 strategy precision for fast, reproducible decisions and legal actions.
@@ -320,12 +320,142 @@ def _river_defense(state):
     return _respond("call", state)
 
 
+def _commitment_hand(hole, board, score):
+    """Distinguish hole-card strength from strength supplied by the board."""
+    category = eval7.handtype(score)
+    ranks = [card[0] for card in hole]
+    board_ranks = [card[0] for card in board]
+    high = max(board_ranks, key=RANKS.index)
+    if category == "Three of a Kind" or category == "Trips":
+        if ranks[0] == ranks[1] and board_ranks.count(ranks[0]) == 1:
+            return "set"
+        return "trips" if any(board_ranks.count(rank) == 2 for rank in ranks) else "board"
+    if category == "Two Pair" and all(rank in board_ranks for rank in ranks) and ranks[0] != ranks[1]:
+        return "two pair"
+    if category in ("Pair", "Two Pair"):
+        if ranks[0] == ranks[1] and RANKS.index(ranks[0]) > RANKS.index(high):
+            return "overpair"
+        if high in ranks and board_ranks.count(high) == 1:
+            return "top pair"
+        if ranks[0] == ranks[1] or any(rank in board_ranks for rank in ranks):
+            return "pair"
+        return "board"
+    return category.lower()
+
+
+def _live_draw(hole, board):
+    """Detect a hole-card flush draw or a straight draw with two rank outs."""
+    if any(sum(card[1] == suit for card in hole + board) == 4
+           and any(card[1] == suit for card in hole) for suit in SUITS):
+        return True
+    board_ranks = {card[0] for card in board}
+    known = board_ranks | {card[0] for card in hole}
+    order = "A" + RANKS
+    outs = set()
+    for index in range(len(order) - 4):
+        window = set(order[index:index + 5])
+        missing = window - known
+        if len(missing) == 1 and window & (known - board_ranks):
+            outs.update(missing)
+    return len(outs) >= 2
+
+
+def _commitment_equity(state, hero, board, deck, broad_weight, width):
+    """Sample runouts against a broad range and its stronger made-hand tail."""
+    ranked = [(eval7.evaluate(board + list(pair)), pair) for pair in combinations(deck, 2)]
+    ranked.sort(key=lambda entry: entry[0])
+    cutoff = ranked[int(len(ranked) * (1 - width))][0]
+    pairs = [pair for _, pair in ranked]
+    value_pairs = [pair for score, pair in ranked if score >= cutoff]
+    rng = random.Random(_state_seed(state))
+    samples = POSTFLOP_SIMULATIONS[state["street"]] // 2
+
+    def equity(pool):
+        points = 0.0
+        for _ in range(samples):
+            first, second = rng.choice(pool)
+            runout = rng.sample(deck, 4 if len(board) == 3 else 3)
+            runout = [card for card in runout if card != first and card != second]
+            community = board + runout[:5 - len(board)]
+            ours = eval7.evaluate(community + hero)
+            theirs = eval7.evaluate(community + [first, second])
+            points += (ours > theirs) + 0.5 * (ours == theirs)
+        return points / samples
+
+    broad = equity(pairs)
+    value = equity(value_pairs)
+    return broad_weight * broad + (1 - broad_weight) * value, value
+
+
+def _stack_commitment(state, owed, pot):
+    hole = _card_strings(state["your_cards"])
+    board = _card_strings(state["community_cards"])
+    hero = [eval7.Card(card) for card in hole]
+    community = [eval7.Card(card) for card in board]
+    hand = _commitment_hand(hole, board, eval7.evaluate(hero + community))
+    draw = _live_draw(hole, board)
+
+    opponent = _opponent_id(state)
+    opponent_stack = next((p.get("stack") for p in state.get("players", [])
+                           if p.get("bot_id") == opponent), None)
+    own_stack = state["your_stack"]
+    effective = own_stack if opponent_stack is None else min(own_stack, opponent_stack + owed)
+    paid = min(owed, own_stack)
+    contestable = max(1, pot - (owed - paid) + paid)
+    spr = (effective - paid) / contestable
+    fraction = paid / max(1, effective)
+    price = paid / contestable
+
+    aggression = _river_aggression(state, opponent)
+    actions = state.get("action_log", [])
+    raises = sum(a.get("street") == state["street"] and a.get("action") in ("raise", "all_in")
+                 for a in actions)
+    earlier_bet = any(a.get("bot_id") == opponent and a.get("street") == "flop"
+                      and a.get("action") in ("raise", "all_in") for a in actions)
+    pressure = min(1.0, 0.26 * max(0, raises - 1) + 0.13 * (earlier_bet and state["street"] == "turn")
+                   + 0.60 * max(0, price - 0.22) + 0.40 * max(0, fraction - 0.25))
+    broad = min(0.96, max(0.15, 0.80 + 0.30 * aggression - pressure * (0.72 - 0.48 * aggression)))
+    width = max(0.10, 0.22 + 0.43 * aggression - 0.17 * pressure)
+    deck = [eval7.Card(card) for card in _remaining_cards(hole + board)]
+    equity, value_equity = _commitment_equity(state, hero, community, deck, broad, width)
+
+    strong = hand in ("set", "straight", "flush", "full house", "quads", "straight flush")
+    pair = hand in ("top pair", "overpair")
+    two_pair = hand in ("two pair", "trips")
+    # Calls preserve bluff-catching. Extra caution applies when a marginal
+    # made hand risks a large fraction of a stack after repeated aggression.
+    margin = 0.05 + 0.12 * pressure * (1 - aggression)
+    if (pair or two_pair) and raises >= 2 and fraction >= 0.35:
+        margin += 0.12 * (1 - aggression)
+    if draw and spr <= 0.5:
+        margin -= 0.025
+    if equity < price + margin:
+        return _respond("fold", state)
+
+    can_raise = effective > owed and (opponent_stack is None or opponent_stack > 0)
+    value_raise = (
+        strong and value_equity >= (0.62 if raises < 2 else 0.72)
+        or two_pair and raises < 2 and value_equity >= 0.65
+        or pair and raises <= 1 and spr <= 0.65 and value_equity >= 0.58
+    )
+    if can_raise and value_raise:
+        proposed = max(state["min_raise_to"], round((pot + paid) * 0.65))
+        effective_target = state["your_bet_this_street"] + effective
+        if effective_target >= state["min_raise_to"]:
+            return _respond(min(proposed, effective_target), state)
+        if own_stack == effective:
+            return _respond("all_in", state)
+    return _respond("call", state)
+
+
 def _postflop(state):
     owed = max(0, int(state.get("amount_owed", 0)))
     pot = max(0, int(state.get("pot", 0)))
     street = state.get("street")
     if street == "river" and owed:
         return _river_defense(state)
+    if street in ("flop", "turn") and owed and state.get("action_log"):
+        return _stack_commitment(state, owed, pot)
     simulations = POSTFLOP_SIMULATIONS.get(street, POSTFLOP_SIMULATIONS["river"])
     equity = estimate_equity(
         state.get("your_cards", []), state.get("community_cards", []),
