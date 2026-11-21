@@ -16,7 +16,7 @@ python3 play.py my_bots/uo_monte bots/caller --docker
 
 ## First local baseline result — November 21, 2026
 
-**Status:** Organizer's unchanged starter bot executed a complete local freezeout match, but the validator has **not yet been run**.
+**Status:** Organizer's unchanged starter bot executed a complete local freezeout match, and **passed the official validator** on November 21, 2026.
 
 ```bash
 python3 play.py my_bots/uo_monte bots/caller --seed 7
@@ -29,7 +29,9 @@ python3 play.py my_bots/uo_monte bots/caller --seed 7
 - No errors/timeouts were shown in the terminal summary
 - **Interpretation:** setup and game integration work; this is **one seed**, not a statistically meaningful performance benchmark. The bot still uses the unmodified starter strategy.
 
-**Next gate:** `make validate BOT=my_bots/uo_monte`. Then benchmark strategy upgrades using repeated matched seeds, swapped seats and timing checks.
+**Validator result:** `make validate BOT=my_bots/uo_monte` returned **PASSED**. Four provided scenarios passed: `preflop_call_or_fold` (fold), `postflop_can_check` (check), `river_facing_large_bet` (fold), and `short_stack_all_in_decision` (raise to 300). These are legality/contract tests; passing them does not establish tournament competitiveness or sandbox runtime performance.
+
+**Next gate:** Implement the first heads-up strategy enhancement on a feature branch, test it across repeated matched seeds and both seats, and re-run the validator before considering a merge to `main`.
 
 ## Checklist
 
@@ -40,6 +42,6 @@ python3 play.py my_bots/uo_monte bots/caller --seed 7
 - [ ] Under 2 seconds on half a CPU core, not just your laptop.
 - [x] Initial local freezeout completed without reported errors/timeouts (seed 7; official validator and sandbox still pending).
 - [ ] Reproducible matched seeds and swapped seats.
-- [ ] Validator passes on exact final submission folder.
+- [x] Official validator passed on `my_bots/uo_monte` (four provided scenarios, November 21, 2026).
 
 Record match seeds, commit SHA, opponent, seat, outcomes, errors/timeouts, and average think time. Qualification is based on duplicate pairing wins/draws, not fixed-hand bb/100. Keep a known-good bot on `main`.
