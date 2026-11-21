@@ -419,6 +419,39 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 
 **Decision:** **Keep committed V3.4 as release candidate.** V3.6/V3.6.1 are research artifacts, not proven upgrades; avoid overfitting to Aggressive or short-stack toy tests. New strategy work should test **postflop decision quality against more varied opponents**, perform unbiased fresh paired comparisons and evaluate overall *match wins plus chip-risk metrics*. Before final submission promote an approved version to public `main` and test organizer submission.
 
+## Claude TASK-CLAUDE-004 — independent stress benchmark of V3.4 (November 21, 2026)
+
+**Source and scope:** Human uploaded `TASK-004-package (1).zip`, a full local research bundle containing `REPORT.md`, `results_table.json`, `aggregate.json`, 12 sets of `matches.csv`, `pairs.csv`, `summary.txt`, `manifest.json`, analysis scripts, selected reconstructed action traces and SHA-256 digests. Tested bot is committed V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`; reported `bot.py` SHA-256 `e887f6a38ef936300a0c2a556863d5da61b6fc6e1dcc4b23a036ff1ec5801040`. Used a disposable runner copy, **not** the active core strategy branch. Partner TASK-004 is local research; no changes to core bot or Git publications requested.
+
+**Independent coordinator consistency check of the uploaded package:** Parsed all 12 `matches.csv` and `pairs.csv` tables: **480 complete match rows and 240 duplicate-pair rows**, all recorded matches `status=ok`, with **zero runner-reported timeouts, errors and restarts**, and all raw-win, pair W/D/L counts exactly reproduce `results_table.json`. All 12 per-run manifest digest strings match the published `results_table.json` fields. This **checks package internal consistency**, not a fresh re-execution of all 480 engine matches or the official restricted Docker sandbox.
+
+**Benchmark design:** 20 development seeds **301–320** and 20 holdout seeds **321–340**, **both seats**, against two independent practice opponents (`overfolder`, `trapper`) under three structures: **standard blinds, 10,000 stack**, **turbo blinds, 10,000 stack**, and **flat 100/200 blinds + 20 ante, 2,000 stack (=10BB)**. This is **12 cells × 40 matches = 480 matches**. The opponents are deliberately exaggerated and **neither bluffs**, so weaknesses versus their bets should not be generalized to normal bluffing tournament opponents. Sealed final seeds `1001–1200` remain unused.
+
+| Structure | Opponent | Development 301–320 pair W/D/L (wins/40) | Holdout 321–340 pair W/D/L (wins/40) |
+|---|---|---:|---:|
+| Standard 10k | Overfolder | 16/3/1 (35) | 15/4/1 (34) |
+| Standard 10k | Trapper | 18/1/1 (37) | 13/7/0 (33) |
+| Turbo 10k | Overfolder | 15/5/0 (35) | 15/5/0 (35) |
+| Turbo 10k | Trapper | 13/7/0 (33) | 12/8/0 (32) |
+| Flat 10BB + ante | Overfolder | 10/9/1 (29) | 14/6/0 (34) |
+| Flat 10BB + ante | Trapper | 13/7/0 (33) | 16/4/0 (36) |
+| **Total per opponent across six blocks** | **Overfolder** | **85W / 32D / 3L, 202 wins/240 matches** | **Combined dev + holdout** |
+| **Total per opponent across six blocks** | **Trapper** | **85W / 34D / 1L, 204 wins/240 matches** | **Combined dev + holdout** |
+
+Total hand net reported **+1,272,000 chips vs Overfolder** and **+1,216,000 chips vs Trapper**; these sums span different starting stacks and are not a single comparable EV measure. Local V3.4 decision p95 reported roughly **9–10 ms**, max ~**27 ms**. Four official validator scenarios passed on the disposable V3.4 copy (Claude report); Docker/0.5CPU sandbox not tested.
+
+**Important action-level findings (observational, not counterfactual profit estimates):**
+
+1. **Flop/turn weak float-calls:** `no pair, no draw` calls **426** against Overfolder and **196** against Trapper; **307/426** and **144/196** later folded. Those later-folded calls spent about **141,689** and **100,136** chips respectively. Strong hypothesis: V3.4 estimates generic postflop equity against a random hand rather than a hand selected for betting; however, folding later is not automatically a mistake because some calls may realize/improve equity. The opponent's bet-range assumptions must be statistically grounded.
+2. **River call-downs vs value-only strategies:** Top-pair-or-weaker calls **0 wins in 77** against Overfolder and **1 in 34** against Trapper, with net hand results **-192,909** and **-114,139** respectively. This is **against toy opponents that never bluff**, not a general instruction to over-fold. Preserve bluff-catching against actual Aggressive opponents.
+3. **Facing a raise of our own value bet:** Against Trapper's **41** flop/turn/river raises, V3.4 **called 38 and folded 0**; all 41 observed Trapper raising hands were trips or stronger, and aggregate net hand result was **-46,164**. These net figures include earlier-street losses; they are not the marginal EV of any one call. Potentially useful adaptive logic: distinguish raises by a value-only opponent from raises by a bluffer, with conservative Bayesian priors and adequate showdown evidence.
+
+**Secondary flop/turn free-check evidence:** V3.4 checked ~80% of free flop opportunities and ~89% on turn against Overfolder; an overfolder could frequently be pressured, as V3.5's selective bluff experiment showed. But V3.4 already wins ~84% against this toy, so match-win headroom is limited and cannot justify indiscriminate bluffing.
+
+**Actionable coordination:** Codex's ongoing V3.7 task explores **no-bet-owed flop/turn betting**, which is not the same as these more important **facing-bet call-range** issues. Do not overwrite V3.7 mid-run. Carry forward the fresh hypothesis for a later bounded **opponent betting-line conditioned equity / call-raise-fold EV** prototype and new stress opponents with *genuine bluffs*, not simply fold-to-every-value-only-raiser policies. Claude TASK-005 is **separate** independent open-source solver-license and data-table feasibility research; it does not alter the bot.
+
+**Limitations:** all three structures use only toy opponent implementations; flat test is 10BB, not sub-5BB; scripted examples are derived from offline match logs with showdown cards that the live bot must never access prematurely; no live official Docker timing; the coordinator verified aggregate consistency, not reproduction from original `play.py` logs (the uploaded ZIP has summary tables, scripts and selected action traces, not all raw per-hand match logs). No strategy code is promoted or committed by this review.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
