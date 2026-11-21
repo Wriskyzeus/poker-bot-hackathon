@@ -41,3 +41,11 @@ decide(state):
 ```
 
 A call's pot-odds threshold alone does **not** select the best raise; betting also depends on fold equity, called equity, stack depth, and risk. Prioritize reliability and benchmark changes.
+
+
+## Current repository status (November 21, 2026)
+
+- Version 1.1, heads-up preflop heuristics plus a critical all-in safety correction, is committed to `feature/strategy` at `26c0a935eea310dbe7c64527d202f02a30431a53`.
+- The submitted `main` branch still uses the organizer's template and must stay untouched until a stronger branch passes tests.
+- 10 initial Version 1 matches against caller yielded 4 wins / 6 losses over seeds 1–5 with swapped bot ordering. This is too little data to claim an advantage.
+- The next development milestone is specified in [v2-monte-carlo.md](v2-monte-carlo.md).
