@@ -1,47 +1,129 @@
-# UO-Monte — IEEE uOttawa × LARUS Poker Bot
+<div align="center">
 
-Two-person Python poker-bot project for the November 21, 2026 hackathon.
+# UO-Monte
+### An autonomous heads-up poker agent
 
-**Game:** heads-up No-Limit Texas Hold'em, freezeout matches, rising blinds and antes. **Runtime:** Python 3.10; 2 seconds per decision, 768 MB RAM, 0.5 CPU core. **Competition:** duplicate-seated qualification pairings followed by a top-four heads-up knockout.
+**Heuristic decision-making · Monte Carlo equity · Opponent-aware play**
 
-## Start here
+Built by a two-student team at the **University of Ottawa** for the **IEEE uOttawa × LARUS Poker Bot Hackathon · November 2026**
 
-This repo incorporates the [official organizer starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit): actual tournament engine (`pokercore/`), bot template (`bots/template/`), reference caller (`bots/caller/`), runner (`play.py`), validator, and pinned dependencies. **Don't edit `pokercore/`.**
+[![Python 3.10](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Texas Hold'em](https://img.shields.io/badge/Game-Heads--Up%20NLHE-303747)](docs/event-spec.md)
+[![Version 3.4](https://img.shields.io/badge/Release-V3.4-176B59)](my_bots/uo_monte/bot.py)
+[![MIT](https://img.shields.io/badge/Starter%20Kit-MIT-737B89)](LICENSE)
 
-Our team is **UO-Monte**. For the official submission, enter the exact identifier **`uo_monte`** as the team name, matching our entry at **`my_bots/uo_monte/bot.py`** (the rules require lowercase letters, digits and underscores). The submitted entry contains **UO-Monte V3.4**, our final tested rule-based and simulation-assisted poker strategy—not the starter template. The official submission folder is `my_bots/uo_monte/`; only the team's bot is collected.
+[**Explore the strategy**](docs/strategy.md) · [**Architecture**](docs/architecture.md) · [**Engineering case study**](docs/engineering-case-study.md) · [**Reproduce a match**](#run-it-locally)
 
-### Run locally — Windows
+</div>
 
-The organizers recommend **WSL Ubuntu**; commands below are for a Linux shell, not PowerShell. Install `git`, `make`, `build-essential` and the [uv Python manager](https://docs.astral.sh/uv/) if needed.
+---
+
+## The project
+
+**UO-Monte** is a self-contained Python agent for **heads-up No-Limit Texas Hold'em**. The tournament engine deals the cards and manages the game; our bot receives the legal, public game state and returns one action at a time—fold, check, call, raise or all-in.
+
+The engineering challenge was to make **useful decisions under imperfect information** while respecting strict execution limits. We designed a fast, explainable strategy that combines stack-aware preflop heuristics, simulated hand equity, risk-sensitive betting decisions and conservative opponent adaptation.
+
+> **Final tournament entry:** [`my_bots/uo_monte/bot.py`](my_bots/uo_monte/bot.py) · **V3.4**. This is a tested heuristic agent, **not** a game-theoretically solved system, a trained neural network or a live LLM.
+
+## At a glance
+
+| What we built | Why it matters |
+| :-- | :-- |
+| **Position- and stack-aware preflop policy** | Adjusts starting-hand decisions for blinds, button position, raises and short stacks |
+| **Monte Carlo showdown equity** | Samples legal unseen cards and scores outcomes with `eval7` |
+| **Pot-odds and commitment logic** | Weighs call price, remaining stack, hand strength and betting pressure |
+| **Opponent-aware decisions** | Interprets recent public betting actions without accessing hidden cards |
+| **Tournament-safe execution** | Returns legal actions through `decide(game_state)` within the sandbox budget |
+| **Reproducible evaluation** | Uses seeded, seat-swapped matches and adversarial practice opponents |
+
+## How the agent makes a decision
+
+```mermaid
+flowchart TD
+    A["Tournament engine<br/>Public game state"] --> B["decide(game_state)"]
+    B --> C{"Betting street"}
+    C -->|Preflop| D["Hand features · position · stack depth<br/>Open / defend / 3-bet / shove"]
+    C -->|Flop or turn| E["Monte Carlo equity · pot odds<br/>Board and stack commitment"]
+    C -->|River| F["Showdown strength · opponent history<br/>Value bet or defend"]
+    D --> G["Legal action normalization"]
+    E --> G
+    F --> G
+    G --> H["fold · check · call · raise · all-in"]
+```
+
+The preflop policy is deliberately lightweight. On later streets, `estimate_equity()` samples possible opponent holdings and board runouts; dedicated river logic weighs revealed information and public betting patterns. A legal-action wrapper handles bet sizing and short-stack edge cases.
+
+**More detail:** [Design and algorithm](docs/strategy.md) · [Component architecture](docs/architecture.md)
+
+## Validation & results
+
+The release was selected through **matched-deal, swapped-seat freezeout testing**, rather than promoting changes based on isolated hands. Several experimental V4–V6 strategies improved selected situations but failed to establish a reliable gain in overall match outcomes.
+
+| Check | Recorded outcome |
+| :-- | :-- |
+| Official starter-kit validator | **Passed** for V3.4 |
+| V3.4 unit test suite | **37 tests passed** in the recorded release verification |
+| Docker sandbox smoke test | **Passed** — 46-hand freezeout against the reference Caller bot; 20,000 final chips; approximately 2 ms average think time |
+| V6-Protection frozen holdout | V3.4: **63/108** wins vs candidate: **60/108** |
+| Final selection | **V3.4**, preserving the best broadly validated release |
+
+**Interpretation matters:** The Docker match is a compatibility smoke test against an intentionally simple reference opponent, **not** a claim of tournament dominance. Holdout results come from a defined synthetic practice-opponent field and do not predict performance against unknown entrants. The final rare all-in price correction also passed validation but changed too few actions to justify promotion.
+
+[**Read the concise evaluation**](docs/engineering-case-study.md#evaluation-and-release-decision) · [Full experiment record](docs/testing.md)
+
+## Run it locally
+
+Requires **Python 3.10**, Git, Make and a C toolchain; commands below target Linux or **WSL Ubuntu**.
 
 ```bash
 git clone https://github.com/Wriskyzeus/poker-bot-hackathon.git
 cd poker-bot-hackathon
+
+# Create/activate a Python 3.10 environment (uv is one option).
 uv python install 3.10
 uv venv --seed -p 3.10 .venv
 source .venv/bin/activate
+
 make install
-python3 play.py my_bots/uo_monte bots/caller --seed 7
 make validate BOT=my_bots/uo_monte
+python3 play.py my_bots/uo_monte bots/caller --seed 7
 ```
 
-For verbose play: `python3 play.py my_bots/uo_monte bots/caller --seed 7 --show`. For full sandbox testing: `make sandbox`, then `python3 play.py my_bots/uo_monte bots/caller --docker` (requires Docker).
+To reproduce the **restricted Docker smoke test**, install Docker with WSL integration (if on Windows), then:
 
-**Final strategy (V3.4):** Stack-aware heads-up preflop scoring and opening/defense, bounded Monte Carlo showdown-equity estimates using `eval7`, pot-odds/stack-commitment analysis on flop and turn, selective river value-betting and opponent-conditioned defensive adjustments from public actions. This is a heuristic poker policy, **not a solved/GTO or live LLM system**. Alternate V4–V6 strategies were experimentally evaluated but did not establish a reliable generalization improvement; see the [testing history](docs/testing.md).
+```bash
+make sandbox
+python3 play.py my_bots/uo_monte bots/caller --docker --seed 7
+```
 
-### Project documents
+The official tournament contract specifies **Python 3.10, 2 seconds per decision, 0.5 CPU core and 768 MB memory**. The organizer's engine, validator and sandbox are provided by the starter kit.
 
-- [Windows / WSL setup](docs/windows-setup.md) · [Rules and API](docs/event-spec.md) · [Day checklist](docs/hackathon-checklist.md)
-- [Architecture](docs/architecture.md) · [Strategy](docs/strategy.md)
-- [Testing](docs/testing.md) · [Team workflow](docs/team-workflow.md)
-- [Original organizers' README](docs/official-starter-kit.md) · [Research references](docs/resources.md)
+## Repository guide
 
-## Submission
+```text
+my_bots/uo_monte/bot.py   Final tournament agent
+tests/                    Bot regression tests
+bots/                     Organizer-provided reference bots
+pokercore/                Organizer-provided engine and sandbox (unmodified)
+play.py                   Local match runner
+docs/                     Design, evaluation and historical engineering notes
+```
 
-Only `my_bots/uo_monte/` is collected, with `bot.py` and optional `data/`. Validate with `make validate BOT=my_bots/uo_monte`, complete the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform), and commit the final bot to **public `main` before the organizers' deadline**. The team was told the actual submission cutoff is **6:30 PM Eastern on November 21, 2026**. Team members confirmed submitting the registration form; preserve the confirmation receipt. The public `main` branch already holds final V3.4.
+**New here?** Start with the [documentation index](docs/README.md). The [engineering case study](docs/engineering-case-study.md) explains the implementation and trade-offs without requiring you to read the long historical logs.
 
-## Development rules
+## Engineering approach & attribution
 
-Keep `main` runnable. Use `feature/strategy`, `feature/engine-integration`, `feature/benchmarking` for experimental work. The validator restricts imports, file writes, network calls, background work and other sandbox operations. **Only the chosen bot folder is shipped; do not depend on local `src/` helpers outside that folder.**
+This is a **team-built, AI-assisted software engineering project**. We used coding assistants during development; the submitted agent runs locally and uses **no network service or live model**. Testing included independently authored practice opponents, controlled seed/seat comparisons, focused regression tests and failed experiments that we deliberately did **not** ship.
 
-The kit is copied from [FreddyyAndrews/poker-hackathon-kit](https://github.com/FreddyyAndrews/poker-hackathon-kit) under its MIT `LICENSE`. UO-Monte's `bot.py` is original team strategy code built on top of the official starter-kit interface; the rest of the organizer's engine remains unmodified. **Final bot:** protected V3.4 at `feature/strategy@a5ea561ff5b70d5a17533579bfc6557b2979622b`; released `bot.py` Git blob `27acb669ee3ac35172a88293c198182b56db0f78`. It passed the official validator and extensive local matched-seat matches. The restricted Docker 0.5-CPU/768MB tournament sandbox was not independently tested; competition performance is not guaranteed. Detailed evaluation records and experiment limitations appear in [docs/testing.md](docs/testing.md).
+The poker engine, sandbox, templates and example opponents originate from the [official Fullhouse Hackathon starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit), distributed under the [MIT License](LICENSE). The UO-Monte decision policy and associated tests are the team's project work. [Upstream provenance](docs/upstream-provenance.md).
+
+---
+
+<div align="center">
+
+**Built to make poker decisions that are fast, legal, measurable and explainable.**
+
+[Implementation](my_bots/uo_monte/bot.py) · [Technical deep dive](docs/engineering-case-study.md) · [Tests](tests/test_uo_monte_bot.py)
+
+</div>
