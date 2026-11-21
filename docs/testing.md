@@ -238,6 +238,40 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 
 **Provisional decision:** V3.3 is a *freeze candidate* because it modestly improves aggressive-opponent results without an observed win-rate regression elsewhere. Preserve committed V3.2 as the known-good fallback. **Do not commit, merge, push, begin V3.4, or authorize further strategy development until the human reviews and approves**. Prioritize shared AI handoff coordination next, per user instruction. Final release requires real sandbox validation and human approval to promote the selected bot to public `main` before **6:30 PM ET**.
 
+## Version 3.4 free-river value-betting review — November 21, 2026
+
+**Source:** User-shared Codex CLI screenshots, local WSL Python 3.10.22, not independently rerun in this review. **V3.3 and V3.4 remain local/uncommitted** at report time; Codex reports V3.3 preserved as a local snapshot and patch, while the last confirmed pushed bot checkpoint remains **V3.2 `cfab27c26222423b46b7293c6416785c7115369e`**. No change to public `main` in this work.
+
+**Change:** When UO-Monte can check for free on the river, V3.4 compares checking with bets of approximately **32%** and **70% of pot**, using public betting history, plausible worse callers, board texture, effective stacks, and risk of a check-raise. Other street logic and V3.3's river facing-bet defense reportedly remain unchanged.
+
+**Validation reported:** V3.3 passed **32 unit tests** and the official validator prior to its local snapshot; V3.4 passed **37 unit tests** and all **4 official validator scenarios**. Codex reports **800 match runs** in the V3.3–V3.4 comparison (400 per version), with 20 seeds × two seat assignments × five opponents for each of development seeds 1–20 and fresh holdout seeds 41–60; zero errors/timeouts/restarts. Label the Floorfix results separately because it uses fixed 50/100 blinds; others used rising blinds.
+
+| Opponent | Blinds | Dev seeds 1–20 V3.3 → V3.4 / 40 | Fresh holdout 41–60 V3.3 → V3.4 / 40 |
+|---|---|---:|---:|
+| Caller | Rising | 40 → 40 | 40 → 40 |
+| Aggressive | Rising | 32 → 33 | 28 → 27 |
+| Tight | Rising | 33 → 33 | 30 → 30 |
+| Mixed | Rising | 24 → 26 | 27 → 29 |
+| Floorfix | Flat 50/100 | 34 → 33 | 32 → 32 |
+| **Total per 200** | Mixed format | **163 → 165** | **157 → 158** |
+| **Combined per 400** | Mixed format | **320 → 323** | |
+
+**Interpretation:** V3.4 recorded **323/400 (80.75%)** wins versus **320/400 (80%)** for V3.3 on these two seed blocks. The +3 match improvement is small, the practice opponents are reused, and this is *not* proof of superior tournament strength. Combined per-opponent differences: Caller 0, Aggressive 0 (development +1, holdout −1), Tight 0, Mixed +4, Floorfix −1. With Caller excluded, totals are V3.3 **240/320** vs V3.4 **243/320**, still a small observed gain.
+
+**River economics/trade-offs reported:**
+- In-position river value bets decreased **1,005 → 836**. Gross realized chips above checking back decreased **473,756 → 440,457** (−33,299), even though mean per bet increased **471 → 527** chips; the lower gross return could reflect different opportunity frequencies and downstream decisions, so do not interpret it alone as net EV.
+- Check-raise losses relative to checking back decreased **13,004 → 7,884 chips** combined (about **39.4%**), comprising development **11,375 → 5,841** and holdout **1,629 → 2,043** (a regression on the holdout block).
+- Gross losses in all-in showdowns decreased **965,133 → 921,045 chips**, though these are gross showdown-loss sums rather than matched-hand total returns.
+- Against Floorfix, V3.4 earned **33,366 fewer chips** relative to checking back across both sets, consistent with missing some thin value.
+
+**Decision timing (local runner):**
+- Development V3.3 p95/max **3.783/21.040 ms** → V3.4 **2.919/20.667 ms**.
+- Fresh holdout V3.3 **3.765/25.720 ms** → V3.4 **2.909/18.694 ms**.
+- Free-river p95 reportedly below **0.61 ms** in both sets. Real 0.5-core/768-MB Docker sandbox limits remain untested as a separate release gate.
+
+**Coordinator decision:** *provisionally retain V3.4 as a release candidate to compare in the true restricted sandbox and independent paired-seat scoring harness*, but do not discard V3.3 or committed V3.2. A small win gain and one holdout check-raise regression do not justify claiming proven dominance. No new strategy version should start before release risk is addressed and the human approves Git write operations. Crucially, the public `main` still holds the template bot as of this review; it must receive a validated, human-approved candidate before the **6:30 PM ET** deadline.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
