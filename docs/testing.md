@@ -672,6 +672,29 @@ Against **established holdout** opponents only (200 matches): V3.4 **145**, V5-P
 **TASK-CLAUDE-008 next:** time-limited handoff/publishing QA, then independent frozen acceptance of an explicitly supplied V5-R snapshot only if Codex finishes it in time. Acceptance seeds **861–880**, same deals and both seats, standard tournament blinds across genuinely different bluffer/value-heavy/rangebot/pressure and old-established bots; QA for correct stable hand IDs, rules/validator/latency, logs and per-opponent/paired W/D/L. If V5-R is not ready before 5:30 PM ET readiness freeze, do not block entry or invent a V5 result: preserve V3.4 and return baseline GO. Any new main release requires distinct human approval. User says registration form submitted.
 
 
+## TASK-CODEX-010 — V5-R adaptive river-overbet experiment (November 21, 2026)
+
+**Source:** User screenshot of final Codex CLI report; coordinator has **not independently replayed local CSV logs, patch, or standalone manifest**. Outcome: **NO-GO / keep V3.4 `a5ea561` on public `main`**. V5-R was built and preserved as a local experimental patch, no Git commit/push/merge/release. No merged prior V5-P or V5-F logic.
+
+**Design:** Public-history-only opponent tracker (public betting opportunities, position, earlier barrels, and revealed river-overbet hands) with conservative, contestable-pot EV threshold and evidence requirement; V5-R allowed to change only `fold↔call` facing a **first river bet >0.9 pot**, never speculative raises. An unmodified `tracker-only` variant was also compared. Official history is finite and revealed showdowns rare. Codex action audit found **409 baseline overbet folds**, with **34** having any prior overbet showdown and **only three** with even one clear-air opponent reveal. **None had the minimum two required**; V5-R **changed zero decisions**. The tracker replayed opportunity counts matching independent official engine checks in all 409 spots.
+
+**Fresh corrected exact-hand-ID matched-seat benchmark:** Ten opponents (including independent `rangebot`), standard rising blinds except flat 50/100 Floorfix. Same deals, seat swaps, and **exact canonical hand IDs** across variants. Each 20-seed block covers 400 matches per version (200 pairs).
+
+| Block | V3.4 matches · pair W/D/L | Tracker-only | V5-R |
+|---|---|---|---|
+| Development **801–820** | **259/400 · 84/91/25** | **259/400 · 84/91/25** | **259/400 · 84/91/25** |
+| Holdout **821–840** | **251/400 · 79/93/28** | **251/400 · 79/93/28** | **251/400 · 79/93/28** |
+| Combined | **510/800** | **510/800** | **510/800** |
+
+All three had **identical action traces and results**. No measure of performance improvement exists; the absence of regressions is explained by policy never firing.
+
+**Offline hindsight opportunity vs live-identification limitation:** Against `bluffer_high` on holdout, V3.4's folded overbets had **41.7% true hindsight showdown equity vs average 36.0% call price**, 48 spots. Against value-heavy `rangebot`, only **3.7%** true equity vs **36.8%** price on 41 folded spots. These are **offline retrospective hidden-card oracle labels only**; neither true villain hole cards nor adversary ID nor future showdowns may be used in live strategy. The report also notes `rangebot` overbet **more often than bluffer_high on dev**, so raw overbet frequency fails to reliably distinguish bluffs vs value.
+
+**Validation:** V5-R **43/43 unit tests** (baseline 37), official validator passed for baseline, tracker-only, V5-R and rangebot; rangebot **9** bundled tests also passed. **2,400 matches completed, zero bot errors/timeouts/restarts**. Holdout local p95/max decision time (ms) V3.4 **17.802/104.111**, tracker-only **17.837/131.040**, V5-R **18.003/112.352**; V5-R aggregate maximum **168.676ms**. Note these are host/local measurements, *not* the restricted Docker 0.5-CPU sandbox. SHA-256 manifest, reconstructable local patch, logs and commands reported available locally, not uploaded here. `main` exact V3.4 bot blob still `27acb669ee3ac35172a88293c198182b56db0f78` at coordinator check; no strategy changes.
+
+**Strategic conclusion:** Evidenced negative/zero experiment. **Do not weaken the showdown-reliability safeguard simply to force V5-R to fire.** The primary win opportunity may instead be **targeted, appropriately priced preflop 3-bet/4-bet aggression against very wide openers**, *not* blanket looser calls as disproved in V5-P. Keep that hypothesis distinct and test conservatively versus independent rangebot/pressure/bluffers and established opponents. Avoid hardcoding particular opponent identities, importing unlicensed external charts, or assuming illustrative minimum-defense frequencies imply optimal play. Partner TASK-CLAUDE-008 is coordinating independent benchmark handoff; reserve its planned **861–880** untouched acceptance block and sealed **1001–1200**.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
