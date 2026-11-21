@@ -7,7 +7,6 @@ to expose bugs instead of hiding them behind a fallback action.
 """
 
 import ast
-import glob
 import importlib.util
 import json
 import sys
@@ -31,17 +30,13 @@ MODS = {n: load(n) for n in NAMES}
 
 
 def real_states(limit=2500):
-    """Decision states from TASK-004 logs (engine-produced), spread over many files."""
-    out = []
-    files = sorted(glob.glob("/tmp/t004/results/*/logs/*.jsonl"))[::5]
-    for f in files:
-        for line in open(f):
-            r = json.loads(line)
-            if r["type"] == "decision" and r["state"].get("type") == "action_request":
-                out.append(r["state"])
-        if len(out) >= limit:
-            break
-    return out[:limit]
+    """Decision states produced by the official engine (portable compressed fixture in tests/fixtures)."""
+    import gzip
+    fx = REPO / "tests" / "fixtures" / "engine_states.json.gz"
+    if not fx.exists():
+        return []
+    with gzip.open(fx, "rt") as g:
+        return json.load(g)[:limit]
 
 
 def raw_reply(mod, st):
@@ -88,7 +83,7 @@ class TestSource(unittest.TestCase):
             self.assertEqual((OPP / n / "bot.py").read_text(), b.render(n), n)
 
 
-@unittest.skipUnless(real_states(1), "TASK-004 logs not available")
+@unittest.skipUnless(real_states(1), "engine-state fixture not available")
 class TestLegalityOnRealStates(unittest.TestCase):
     states = real_states()
 
@@ -135,6 +130,30 @@ class TestLegalityOnRealStates(unittest.TestCase):
                     if p["seat"] != alt["seat_to_act"]:
                         p["hole_cards"] = ["As", "Ah"]
                 self.assertEqual(mod.decide(st), mod2.decide(alt), n)
+
+
+@unittest.skipUnless(real_states(1), "engine-state fixture not available")
+class TestCanonicalHandIds(unittest.TestCase):
+    """Opponent choices must not depend on the runner's match id or on bot names (hero version)."""
+    states = real_states(400)
+
+    def test_actions_invariant_to_match_id_and_bot_names(self):
+        for n in NAMES:
+            a, b = load(n, "_ca"), load(n, "_cb")
+            for st in self.states:
+                alt = json.loads(json.dumps(st))
+                alt["hand_id"] = "uo_monte_v5r_candidate_seed861_h%04d" % st["hand_num"]
+                alt["your_bot_id"] = "renamed_me"
+                for p in alt["players"]:
+                    p["bot_id"] = "hero_v5_r" if p["seat"] != alt["seat_to_act"] else "renamed_me"
+                for e in alt["action_log"]:
+                    e["bot_id"] = "x" + str(e["seat"])
+                self.assertEqual(a.decide(st), b.decide(alt), n)
+
+    def test_actions_do_depend_on_hand_number(self):
+        m = load("bluffer_high", "_cc")
+        st = self.states[0]
+        self.assertNotEqual(m._canon_hand(st), m._canon_hand(dict(st, hand_num=st["hand_num"] + 1)))
 
 
 class TestSyntheticBoundaries(unittest.TestCase):

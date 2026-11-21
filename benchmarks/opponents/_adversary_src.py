@@ -192,14 +192,24 @@ def equity_guess(strength, draw, street):
 
 
 # ------------------------------------------------------------------------ state helpers
+def _canon_hand(state):
+    """Canonical hand key for the hash-based "chance": depends only on the hand NUMBER, never on the runner's
+    match id or on either bot's name/version, so two hero versions face identical opponent choices in identical
+    spots. The "local_h%04d" form reproduces the ids the official play.py produces."""
+    n = state.get("hand_num")
+    if n is None:
+        n = int(str(state["hand_id"]).rsplit("_h", 1)[-1])
+    return "local_h%04d" % n
+
+
 def _u(state, salt):
-    key = "%s|%s|%s|%s" % (state["hand_id"], ",".join(state["your_cards"]),
+    key = "%s|%s|%s|%s" % (_canon_hand(state), ",".join(state["your_cards"]),
                            ",".join(state["community_cards"]), salt)
     return (zlib.crc32(key.encode()) & 0xFFFFFFFF) / 4294967296.0
 
 
 def _plan_u(state):
-    key = "%s|%s|plan" % (state["hand_id"], ",".join(state["your_cards"]))
+    key = "%s|%s|plan" % (_canon_hand(state), ",".join(state["your_cards"]))
     return (zlib.crc32(key.encode()) & 0xFFFFFFFF) / 4294967296.0
 
 

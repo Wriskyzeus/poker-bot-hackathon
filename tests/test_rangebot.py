@@ -1,5 +1,5 @@
 """Self-tests for the TASK-007 independent opponent `rangebot` (benchmark-only). Run: python3 tests/test_rangebot.py -v"""
-import ast, glob, importlib.util, json, time, unittest
+import ast, importlib.util, json, time, unittest
 from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 BOT = REPO / "benchmarks" / "opponents" / "rangebot" / "bot.py"
@@ -9,14 +9,12 @@ def load(tag=""):
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
 
 def real_states(limit=1500):
-    out = []
-    for f in sorted(glob.glob("/tmp/t006/results/*/logs/*.jsonl"))[::7]:
-        for line in open(f):
-            r = json.loads(line)
-            if r["type"] == "decision" and r["state"].get("type") == "action_request":
-                out.append(r["state"])
-        if len(out) >= limit: break
-    return out[:limit]
+    import gzip
+    fx = REPO / "tests" / "fixtures" / "engine_states.json.gz"
+    if not fx.exists():
+        return []
+    with gzip.open(fx, "rt") as g:
+        return json.load(g)[:limit]
 
 STATES = real_states()
 M = load()
@@ -44,7 +42,7 @@ class TestSource(unittest.TestCase):
         self.assertNotIn("_adversary_src", BOT.read_text())
         self.assertFalse(hasattr(M, "made_strength"))
 
-@unittest.skipUnless(STATES, "TASK-006 logs not available")
+@unittest.skipUnless(STATES, "engine-state fixture not available")
 class TestReal(unittest.TestCase):
     def test_legal_actions_and_no_exceptions(self):
         for st in STATES:
@@ -55,6 +53,14 @@ class TestReal(unittest.TestCase):
             alt = json.loads(json.dumps(st))
             for p in alt["players"]:
                 if p["seat"] != alt["seat_to_act"]: p["hole_cards"] = ["As", "Ah"]
+            self.assertEqual(M.decide(st), m2.decide(alt))
+    def test_invariant_to_match_id_and_bot_names(self):
+        m2 = load("_c")
+        for st in STATES[:300]:
+            alt = json.loads(json.dumps(st))
+            alt["hand_id"] = "other_runner_v5r_h%04d" % st["hand_num"]
+            for p in alt["players"]: p["bot_id"] = "renamed%d" % p["seat"]
+            for e in alt["action_log"]: e["bot_id"] = "renamed%d" % e["seat"]
             self.assertEqual(M.decide(st), m2.decide(alt))
     def test_latency_and_action_variety(self):
         worst = 0; kinds = set()
