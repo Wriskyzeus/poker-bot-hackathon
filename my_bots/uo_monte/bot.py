@@ -1,11 +1,19 @@
-"""UO-Monte Version 1: an explainable heads-up preflop policy.
+"""UO-Monte Version 2: preflop ranges plus bounded postflop Monte Carlo.
 
 The ranges are coarse heuristics, not a solved/GTO chart.  They trade mixed
 strategy precision for fast, reproducible decisions and legal actions.
-Postflop remains the starter policy until the equity module is added.
+Postflop equity is initially estimated against a uniformly random opponent
+hand. That is deliberately not presented as equity versus a raiser's range.
 """
 
+import random
+
+import eval7
+
+
 RANKS = "23456789TJQKA"
+SUITS = "shdc"
+POSTFLOP_SIMULATIONS = {"flop": 320, "turn": 384, "river": 512}
 
 
 def _hand_features(cards):
@@ -149,18 +157,117 @@ def _preflop(state):
     return _respond("fold", state)
 
 
+def _card_strings(cards):
+    """Normalize card strings without relying on engine-internal card objects."""
+    return [str(card) for card in cards]
+
+
+def _remaining_cards(known):
+    known = set(known)
+    return [rank + suit for rank in RANKS for suit in SUITS
+            if rank + suit not in known]
+
+
+def _sample_runout(hole_cards, community_cards, rng):
+    """Draw opponent hole cards and the missing board cards without overlap."""
+    known = _card_strings(hole_cards) + _card_strings(community_cards)
+    available = _remaining_cards(known)
+    draw_count = 2 + max(0, 5 - len(community_cards))
+    drawn = rng.sample(available, draw_count)
+    opponent = drawn[:2]
+    board = _card_strings(community_cards) + drawn[2:]
+    return opponent, board
+
+
+def estimate_equity(hole_cards, community_cards, simulations=POSTFLOP_SIMULATIONS["flop"], seed=0):
+    """Estimate showdown equity versus one uniformly random opponent hand.
+
+    Each trial samples two opponent cards plus enough unseen board cards to
+    reach five, then evaluates both seven-card hands with eval7. Ties count as
+    half a win. The finite sample count is intentionally bounded for the
+    tournament decision deadline; it is not exact equity and does not model a
+    betting range.
+    """
+    hole_cards = _card_strings(hole_cards)
+    community_cards = _card_strings(community_cards)
+    if len(hole_cards) != 2 or not 3 <= len(community_cards) <= 5:
+        raise ValueError("postflop equity requires two hole cards and a 3-5 card board")
+    if len(set(hole_cards + community_cards)) != len(hole_cards) + len(community_cards):
+        raise ValueError("known cards must be unique")
+    simulations = max(1, min(int(simulations), 4096))
+    hero = [eval7.Card(card) for card in hole_cards]
+    wins = 0.0
+    rng = random.Random(int(seed))
+    for _ in range(simulations):
+        opponent, board = _sample_runout(hole_cards, community_cards, rng)
+        board_cards = [eval7.Card(card) for card in board]
+        hero_score = eval7.evaluate(hero + board_cards)
+        villain_score = eval7.evaluate(
+            [eval7.Card(card) for card in opponent] + board_cards
+        )
+        if hero_score > villain_score:
+            wins += 1.0
+        elif hero_score == villain_score:
+            wins += 0.5
+    return wins / simulations
+
+
+def _state_seed(state):
+    """Build a reproducible seed without clock/process-randomized hashing."""
+    text = "|".join(_card_strings(state.get("your_cards", []))
+                    + _card_strings(state.get("community_cards", [])))
+    text += "|" + str(state.get("hand_num", 0)) + "|" + str(state.get("street", ""))
+    return sum((index + 1) * ord(char) for index, char in enumerate(text))
+
+
+def _value_bet_target(state, equity):
+    """Choose a modest total-street value bet when checking is free."""
+    pot = max(1, int(state.get("pot", 0)))
+    minimum = int(state.get("min_raise_to", 0))
+    # 60% pot is an intentionally simple value size; _respond enforces the
+    # engine's minimum and converts an unaffordable intended raise to all-in.
+    return max(minimum, int(round(pot * 0.60)))
+
+
+def _postflop(state):
+    owed = max(0, int(state.get("amount_owed", 0)))
+    pot = max(0, int(state.get("pot", 0)))
+    street = state.get("street")
+    simulations = POSTFLOP_SIMULATIONS.get(street, POSTFLOP_SIMULATIONS["river"])
+    equity = estimate_equity(
+        state.get("your_cards", []), state.get("community_cards", []),
+        simulations=simulations, seed=_state_seed(state),
+    )
+
+    if not owed and state.get("can_check"):
+        # No fold equity is assumed: only bet for clear value.
+        if equity >= 0.72 and int(state.get("your_stack", 0)) > 0:
+            return _respond(_value_bet_target(state, equity), state)
+        return {"action": "check"}
+
+    if owed:
+        pot_odds = owed / float(max(1, pot + owed))
+        # Random-hand equity is optimistic against a raiser, so require a
+        # margin before continuing. This remains a price heuristic, not GTO.
+        required_equity = min(0.98, pot_odds + 0.08)
+        if equity >= required_equity:
+            # Value raise only with a substantial edge and enough chips left;
+            # otherwise call and preserve the fold option when the price is bad.
+            if equity >= 0.78 and int(state.get("your_stack", 0)) > owed:
+                target = max(int(state.get("min_raise_to", 0)), int(round((pot + owed) * 0.65)))
+                return _respond(target, state)
+            return _respond("call", state)
+        return _respond("fold", state)
+
+    # Defensive fallback for malformed/incomplete state: never check while
+    # owed, but otherwise keep the action legal and conservative.
+    return _respond("check", state)
+
+
 def decide(game_state: dict) -> dict:
     if game_state.get("type") == "warmup":
         return {"action": "check"}
     if game_state.get("street") == "preflop":
         return _preflop(game_state)
 
-    # Preserve the baseline postflop policy, with legal all-in handling and no
-    # check while chips are owed.
-    pot = int(game_state.get("pot", 0))
-    owed = int(game_state.get("amount_owed", 0))
-    if not owed and game_state.get("can_check"):
-        return {"action": "check"}
-    if owed <= pot * 0.25:
-        return {"action": "call"}
-    return {"action": "fold"}
+    return _postflop(game_state)
