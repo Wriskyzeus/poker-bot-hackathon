@@ -268,6 +268,21 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Deliverables:** Full results, commands, seed lists, local Git status, source diff/patch, validator and unit-test outcomes, example action changes, and recommendation whether **committed V3.4** or local V3.7 is stronger. No automatic Git publication.
 
+### Research pivot — open-source solver-assisted architecture (November 21, 2026)
+**Coordinator conducted independent web research** on MIT-licensed heads-up no-limit solver / precomputed chart sources and reviewed V3.4 core code and official organizer data allowances. Findings and specific upstream links: **`docs/open-source-strategy-research.md`** on `origin/main`.
+
+**Underlying limitation:** V3.4 preflop uses coarse hand-score cutoffs rather than CFR-derived SB-vs-BB strategy, and generic flop/turn equity often treats the opponent's two cards as uniformly random despite observed betting actions. This is a more important structural opportunity than another 2-point cutoff adjustment. The organizers allow properly licensed pretrained tables under `data/` (<= 200MB), while the tournament allows only Python standard library plus `eval7`, `numpy`, `scipy`, `treys`, `scikit-learn` and prohibits subprocesses/network/writes during play. **Research sources are candidates, not trusted/validated replacements.**
+
+### TASK-CODEX-007 — MIT offline solver preflop chart feasibility and range-aware design
+**Status:** **QUEUED; NOT ACTIVE until the human team approves/requests after Codex finishes TASK-CODEX-006**. Preserve existing agent focus; do not automatically switch or fork a simultaneous core-bot edit.
+
+1. Read `docs/open-source-strategy-research.md` and latest `origin/main:AGENTS.md`, `HANDOFF.md` and `docs/event-spec.md`. Verify upstream repo **licenses, exact commits, usage and quality** before importing any material; attribution and MIT notices matter. Do not copy any other finalist's complete bot. External researched candidates: `cRITlamb/poker_solver` and `chirenonhive/poker-solver`; `jensbaagaard/poker-practice` is a format reference **not a HU source**; beware that `bupticybee/TexasSolver` is **AGPL-3.0**.
+2. Assess an **offline-generated, runtime-static** 169-hand-class (or combo-level if size permits) **heads-up SB/BTN vs BB push/fold, call-jam and 3-bet-defense table** across 3–15 BB and ante configurations. No live solver imports in the bot. Verify at least one depth with independent known examples and/or a second solver. Diagnose tree-action/blind assumptions, ranges conditioned on prior action and correct effective stacks.
+3. If and only if feasible with compatible licenses, create an isolated **V4-table experiment** based on committed V3.4 `a5ea561`, adding only a compact artifact under `my_bots/uo_monte/data/` and a safe table reader/decision bridge. Do not merge existing unadopted V3.5/3.6/3.6.1/V3.7 experiments into the candidate. Preserve exact current V3.4 fallback and all local recovery patches.
+4. Compare against V3.4 over **fresh development seeds 441–460** and **frozen holdout 461–480**, both seats vs at least Caller, Aggressive, Tight, Mixed and Floorfix, plus 3–15BB ante stress and newly available Claude practice opponents as diagnostics. Report raw wins and paired W/D/L, stack-risk and preflop all-in chip results, changed-action counts, p95/max, full unit tests and official validator. Use sealed 1001–1200 **only on an approved final candidate**.
+5. If offline chart integration fails or is too weak, **do not ship it**. Report whether the higher-upside alternative—flop/turn **betting-line-conditioned opponent range equity plus action-EV estimation**, with calibrated shrinkage and low runtime cost—should be the next prototype instead.
+6. No modification to `main`, `docs/testing.md`, `HANDOFF.md`, Claude's branch or `pokercore/` from Codex; no unapproved commit/push/merge. Preserve release checkpoint 5:30 PM and submission deadline 6:30 PM ET. Do not let solver installation or long training threaten final submission.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -282,6 +297,7 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 - [x] TASK-CODEX-004 V3.6 local comparison complete: 43 tests + validator, 318/400 vs V3.4 316/400, 61/84 vs 56/84 ante/short-stack stress, Aggressive holdout -3. **Uncommitted in isolated worktree.**
 - [x] TASK-CODEX-005 V3.6.1 completed locally: fresh holdout 154/200 vs V3.4 155/200; short-stack stress 45/64 vs V3.4 48/64; **not adopted**. V3.4 remains release candidate.
 - [ ] TASK-CODEX-006 V3.7 bounded flop/turn policy and fresh matched-seat benchmarking, local-only and no Git publication approval.
+- [ ] TASK-CODEX-007 **QUEUED, not active:** MIT solver-assisted offline push/fold blueprint + range-aware architecture feasibility; human to authorize after V3.7.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
