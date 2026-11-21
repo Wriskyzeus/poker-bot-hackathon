@@ -41,9 +41,9 @@ Very short stacks trigger approximate shove/fold logic. These are **engineering 
 
 `estimate_equity()` draws opponent cards and missing board cards from the **unseen deck**. Each trial evaluates a legal seven-card showdown through `eval7`.
 
-[
+$$
 \hat{E}=\frac{N_{\text{wins}}+\frac12 N_{\text{ties}}}{N_{\text{simulations}}}
-]
+$$
 
 Flop, turn and river use respectively **320, 384 and 512** simulations in the released policy. This is bounded runtime-cost estimation versus a **uniformly random** opponent holding. It is **not** a direct estimate against a specific opponent's conditional betting range.
 
@@ -51,9 +51,9 @@ Flop, turn and river use respectively **320, 384 and 512** simulations in the re
 
 When facing a bet, a basic no-future-betting reference threshold is:
 
-[
+$$
 E_{\text{break-even}}=\frac{C}{P+C}
-]
+$$
 
 where `C` is the additional call amount and `P` is the current pot (which already includes the opponent's bet). The policy applies conservative adjustments when ranges, betting pressure or stack commitment make this reference price misleading.
 
