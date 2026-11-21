@@ -320,6 +320,9 @@ Committed V3.4 `a5ea561` across 6 matched-seed cells per toy opponent: **202/240
 
 **Deadline:** Coordinate findings as soon as feasible; the independent audit must **not block shipping** our best validated and human-approved strategy to public `main` well before the tournament's **6:30 PM ET** submission cutoff.
 
+## Opponent threat model (coordinator QA — November 21, 2026)
+See **`docs/opponent-threat-model.md`** for a prioritized, rules-checked catalog of how strong tournament opponents might beat UO-Monte and which adversarial tests would establish whether a fix generalizes. **P0 strategic risks:** balanced value/bluff aggression, check-raise trapping, Nash-aware short-stack pressure; **P0 operational risk:** release readiness, sandbox timing and valid actions. This is a **future testing gate, not a new instruction interrupting** Codex TASK-CODEX-007 (V4 opponent modeling) or Claude TASK-CLAUDE-005 (licensed solver chart research). Do not adopt any change because it wins against an unrealistic nonbluffing toy; keep Aggressive/Mixed and diverse new bluff-capable opponents in held-out testing. All external code/data require the existing independent license and organizer-rule checks; no edit of submitted bot is authorized by this document.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
