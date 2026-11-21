@@ -1,6 +1,6 @@
 # UO-Monte: competition-day build milestones
 
-**Goal:** build a strong, reliable heads-up poker agent before the organizers' submission cutoff. The attendee reports the event runs **9:30 AM–10 PM**, but the code deadline may be earlier; ask organizers for the **exact submission cutoff** immediately.
+**Goal:** build a strong, reliable heads-up poker agent before the organizers' submission cutoff. The attendee reports the event runs **9:30 AM–10 PM**, but the organizers separately set the **submission cutoff at 6:30 PM Eastern Time on November 21, 2026**, as reported verbally by the team.
 
 The team will not spend the entire event on a single ambitious model. We work in short release gates so that a validated submission is always available.
 
@@ -35,7 +35,7 @@ The team will not spend the entire event on a single ambitious model. We work in
 - Benchmark against the organizer's caller plus contrasting tight, aggressive, and random baselines.
 - Use repeated seeds and seat swaps, not a single match.
 - Record wins/losses, timeouts and average decision time. Revert regressions.
-- Stop experimenting with enough time to validate and submit **public `main`** before the actual cutoff.
+- Stop experimenting with enough time to validate and submit **public `main`** well before **6:30 PM ET**, with the final validated submission on **public `main`**.
 
 ## Parallel work for two teammates
 
