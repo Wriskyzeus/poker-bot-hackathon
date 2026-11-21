@@ -204,6 +204,40 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 
 **Verified GitHub checkpoint:** `cfab27c26222423b46b7293c6416785c7115369e`, message "Implement UO-Monte V3.2 stack commitment intelligence"; exactly `my_bots/uo_monte/bot.py` and `tests/test_uo_monte_bot.py` changed. Codex reported tracked working tree clean and local `benchmarks/` directory untracked. No `main` or teammate-branch modification.
 
+## Version 3.3 adaptive aggression — November 21, 2026
+
+**Source:** Team-supplied local Codex CLI screenshots. **V3.3 is local and uncommitted as reported.** Current verified saved fallback is **V3.2** on `feature/strategy` at `cfab27c26222423b46b7293c6416785c7115369e`. No claim that V3.3 was pushed or is on the tournament `main`.
+
+**Design change:** Preserve V3.2's protection against value-heavy ranges, but identify repeat aggressive behavior across *multiple prior hands* (preflop and postflop) before loosening first-bet calls or allowing a minimum value raise with top pair/overpair at moderate stack-to-pot ratios. Keep conservative behavior without sufficient prior observations; reraises remain under V3.2 safeguards. Preflop policy unchanged; river change narrowly reweights the range against a first bet.
+
+**Testing reported:** **32 unit tests**, all four official validator scenarios, and **800 completed local matches** (V3.2 and V3.3 each: five opponents × 40 matches on development seeds 1–20 and five opponents × 40 matches on holdout seeds 21–40, swapping both seats). No reported errors, timeouts or restarts. These results are from practice opponents, not the tournament field.
+
+| Opponent | Blind format | Dev V3.2 → V3.3 wins / 40 | Unseen V3.2 → V3.3 wins / 40 |
+|---|---|---:|---:|
+| Caller | Rising | 40 → 40 | 40 → 40 |
+| Aggressive | Rising | 31 → 32 | 31 → 32 |
+| Tight | Rising | 33 → 33 | 27 → 27 |
+| Mixed | Rising | 24 → 24 | 26 → 26 |
+| Floorfix | Flat 50/100 | 34 → 34 | 30 → 30 |
+| **Total per 200** | Mixed formats | **162 → 163** | **154 → 155** |
+| **Combined per 400** | Mixed formats | **316 → 318** |  |
+
+**Interpretation:** V3.3 wins 318/400 (79.5%) vs V3.2 316/400 (79.0%) across development plus holdout samples—only **2 additional wins overall**. This is a modest observed gain, **not conclusive evidence of superiority**. The holdout seeds were separate from development seeds, but repeated use of the same five test opponents limits generalizability.
+
+**Decision timings (local runner only):**
+- Dev: V3.2 p95 / max **3.746 / 31.459 ms**; V3.3 **3.757 / 25.352 ms**.
+- Holdout: V3.2 **3.729 / 29.661 ms**; V3.3 **3.746 / 28.639 ms**.
+- Both well under the stated 2,000 ms deadline locally; official restricted **0.5 CPU core / 768 MB** sandbox execution remains a separate release gate.
+
+**Behavioral evidence and regressions:**
+- Aggressive: replay of identical river decisions found **21 new calls** (15 profitable, 6 losing) worth **+67,237 chips relative to folding** on those decisions.
+- Aggressive flop/turn stack-off losses increased **64,696 → 68,788 chips** across both benchmark sets, despite the additional two match wins.
+- Floorfix: two extra losing terminal river calls on holdout seeds, costing **2,117 chips relative to folding**; match win totals unchanged.
+- Caller, Tight, Mixed: reported win totals, stack-off losses and river-call results unchanged on both seed sets.
+- Seed 4 / seat 0 / hand 1 versus Aggressive still suffers the earlier no-history passive-line issue; the V3.3 behavior remains conservative before evidence accumulates.
+
+**Provisional decision:** V3.3 is a *freeze candidate* because it modestly improves aggressive-opponent results without an observed win-rate regression elsewhere. Preserve committed V3.2 as the known-good fallback. **Do not commit, merge, push, begin V3.4, or authorize further strategy development until the human reviews and approves**. Prioritize shared AI handoff coordination next, per user instruction. Final release requires real sandbox validation and human approval to promote the selected bot to public `main` before **6:30 PM ET**.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
