@@ -286,6 +286,17 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 
 **Release assessment:** Codex prefers V3.4 **conditional on an official Docker smoke run**. V3.3 is the next fallback only after a verified chronological checkpoint; V3.2 (`cfab27c`) is the current *committed* fallback. **Public `main` still holds the original starter bot**, so a human-approved tested release must be promoted there before **6:30 PM ET November 21, 2026**, independent of whether Docker can be installed locally.
 
+## V3.3 and V3.4 Git checkpoints verified — November 21, 2026
+
+**Source:** Confirmed directly via GitHub after the teammate authorized Codex's checkpoint push.
+
+- **V3.2 fallback:** `cfab27c26222423b46b7293c6416785c7115369e` on `feature/strategy`.
+- **V3.3:** `8fe259052f13bc4a096be132b57cea1c6473a7dd`, parent V3.2; message `Checkpoint UO-Monte V3.3 adaptive aggression`.
+- **V3.4:** `a5ea561ff5b70d5a17533579bfc6557b2979622b`, parent V3.3; message `Checkpoint UO-Monte V3.4 river value betting`.
+- **Verified remote tip:** `origin/feature/strategy` points to V3.4. Both commits change only `my_bots/uo_monte/bot.py` and `tests/test_uo_monte_bot.py`.
+- **Submission:** Public `main` still contains the original template bot, not V3.4. Strategy branch commits alone are **not a tournament submission**.
+- **Independent verification limit:** GitHub confirms branch ancestry and file changes; the 32/37 unit tests, official validator, freezeouts and benchmark metrics were reported by Codex and have not been rerun through GitHub.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
