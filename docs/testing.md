@@ -191,7 +191,7 @@ V3.2 changed flop/turn response to bets using effective stacks, stack-to-pot rat
 | Tight | Rising | 26 | 33 | 141,891 → 44,878 |
 | Mixed | Rising | 22 | 24 | 132,305 → 69,350 |
 | External Floorfix | Flat 50/100 | 26 | 34 | 153,481 → 16,819 |
-| **Total** | Mixed | **148 / 200** | **162 / 200** | **446,342 → 161,089 (~64% reduction)** |
+| **Total** | Mixed | **148 / 200** | **162 / 200** | **446,342 → 161,088 (~64% reduction)** |
 
 The 'losses' column sums losses in all-in showdowns where the final commitment occurred on the flop or turn; it is **not** a total EV or win-rate measure. Reported overall local decision p95/max: V3.1 **3.656 / 10.088 ms** vs V3.2 **3.647 / 7.465 ms**. Facing flop or turn bets, p95/max improved from **2.896 / 10.088** to **1.867 / 2.748 ms**.
 
