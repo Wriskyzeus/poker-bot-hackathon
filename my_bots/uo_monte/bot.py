@@ -72,16 +72,18 @@ def _respond(action, state):
     """Convert a policy choice to an action respecting total-bet semantics."""
     stack = max(0, int(state.get("your_stack", 0)))
     owed = max(0, int(state.get("amount_owed", 0)))
-    if stack <= owed:
-        return {"action": "all_in"} if stack else {"action": "call"}
-    if action == "check" and state.get("can_check"):
-        return {"action": "check"}
-    if action == "call":
-        return {"action": "call"} if owed else {"action": "check"}
+    # Preserve the policy's intent before applying stack-size normalization.
+    # In particular, a fold must never become an all-in call when covered.
     if action == "fold":
         return {"action": "fold"}
+    if action == "check":
+        return {"action": "check"} if state.get("can_check") else {"action": "call"}
+    if action == "call":
+        return {"action": "call"} if owed else {"action": "check"}
     if action == "all_in":
         return {"action": "all_in"}
+    if stack <= owed:
+        return {"action": "all_in"} if stack else {"action": "call"}
     target = max(int(state.get("min_raise_to", 0)), int(action))
     affordable_total = int(state.get("your_bet_this_street", 0)) + stack
     if target >= affordable_total:
@@ -159,8 +161,6 @@ def decide(game_state: dict) -> dict:
     owed = int(game_state.get("amount_owed", 0))
     if not owed and game_state.get("can_check"):
         return {"action": "check"}
-    if owed and int(game_state.get("your_stack", 0)) <= owed:
-        return {"action": "all_in"}
     if owed <= pot * 0.25:
         return {"action": "call"}
     return {"action": "fold"}
