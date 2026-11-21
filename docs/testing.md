@@ -272,6 +272,20 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 **Coordinator decision:** *provisionally retain V3.4 as a release candidate to compare in the true restricted sandbox and independent paired-seat scoring harness*, but do not discard V3.3 or committed V3.2. A small win gain and one holdout check-raise regression do not justify claiming proven dominance. No new strategy version should start before release risk is addressed and the human approves Git write operations. Crucially, the public `main` still holds the template bot as of this review; it must receive a validated, human-approved candidate before the **6:30 PM ET** deadline.
 
 
+## V3.3 / V3.4 reconstructed checkpoints, local readiness, and qualification pairing — November 21, 2026
+
+**Source:** Team-supplied Codex CLI screenshot of the local readiness report, timestamp approximately 13:26 ET. **Neither V3.3 nor V3.4 was committed, staged or pushed** according to the report: `feature/strategy` remains at **V3.2 `cfab27c`**, with V3.4 bot and tests in the local working tree. Codex independently reconstructed V3.3 and V3.4 from V3.2 and also reconstructed V3.4 by applying sequential patches; bot and test snapshots matched byte for byte.
+
+**Reconstruction and validation:** The reconstructed V3.3 suite passed **32 tests**; V3.4 passed **37 tests**. The current V3.4 also passed all **four official validator scenarios**. Two chronological Git checkpoints are prepared but **need human approval** before any commit or push.
+
+**Local runtime readiness:** Official local match runner completed **72 freezeouts** with **5,949 UO-Monte decisions**, covering standard rising blinds, antes, **198 decisions with stacks at eight big blinds or less**, and forced blind all-ins. The report states **zero errors, timeouts or restarts**. The import audit found only `bisect`, `itertools`, `random` and `eval7`. Local decision latency p95 **2.836 ms**, max **4.369 ms**, both below the **2,000 ms** action limit in the tested environment.
+
+**Unresolved sandbox risk:** `make sandbox` stopped with **exit 127** because Docker was unavailable in the local WSL environment. Official restricted **0.5 CPU, 768 MB RAM, read-only filesystem and network isolation remain untested**. Local runtime and static validator do **not** substitute for sandbox verification.
+
+**Duplicate-pair qualification testing:** The reported rule scores two swapped-seat matches as one pair: two wins = pair win; 1–1 split = pair draw; two losses = pair loss. Codex verified swapped hole cards and identical board prefixes on **1,051 shared hands** from **24 new local pairings**, reporting **V3.4 17 pair wins, 5 draws, 2 losses**. Re-scoring the earlier development and holdout practice matches, including fixed-blind Floorfix, reportedly gives **V3.3: 124 wins, 72 draws, 4 losses** and **V3.4: 128 wins, 67 draws, 5 losses** across 200 pairs. V3.4's improvement in pair wins is offset by one extra pair loss; the sample is not enough to prove a meaningful advantage.
+
+**Release assessment:** Codex prefers V3.4 **conditional on an official Docker smoke run**. V3.3 is the next fallback only after a verified chronological checkpoint; V3.2 (`cfab27c`) is the current *committed* fallback. **Public `main` still holds the original starter bot**, so a human-approved tested release must be promoted there before **6:30 PM ET November 21, 2026**, independent of whether Docker can be installed locally.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
