@@ -348,6 +348,32 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 **Coordinator decision:** **Keep V3.4 as leading committed release candidate**. Preserve V3.5 locally as a labeled experimental patch/snapshot and tests, but **do not promote to `feature/strategy` or `main`** without new evidence on a diverse, independently tested opponent field. The next Codex direction can focus on unaddressed *preflop/short-stack* leaks, while partner Claude completes its separate benchmark-hardening and diverse practice-opponent task (TASK-CLAUDE-003). Preserve task isolation and seek human approval before any Git writes to strategy code.
 
 
+## Version 3.6 preflop / effective-stack optimization — November 21, 2026
+
+**Source:** user-shared Codex CLI screenshot; benchmark metrics and code behavior are reported by Codex, not independently replayed in this documentation update. **V3.6 remains an uncommitted, isolated Git worktree experiment**. Both local/remote `feature/strategy` remain committed V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`. Original V3.5 local bot/tests remain untouched; Codex reports a byte-for-byte reproducible V3.5 recovery patch.
+
+**Diagnosis and change:** Prior holdout replay found that V3.4 missed the short-stack branch for **544 decisions**, evaluating only its own stack rather than **effective stack**. In one deal, it reraised pocket tens into fourth bets from Tight, Mixed and Floorfix, whereas V3.6 called when replayed with public action history. The V3.6 preflop-only experiment caps raises at effective stacks, includes antes/contestable chips when pricing calls, distinguishes opens versus repeated aggression, maintains position-aware opens and modifies shallow-stack sizing/shoves. V3.4 postflop policy remained unchanged. Reported savings are not proof those exact hand choices generalize to new opponents.
+
+**Validation:** `43` unit tests and all four official validator cases passed under Python 3.10.22. Reported **968 matches** (800 comparison matches plus 168 ante/short-stack stress matches) with zero errors, timeouts or restarts. Final sealed seeds `1001–1200` unused.
+
+| Opponent | Blinds | Dev seeds 201–220: V3.4 → V3.6 wins / 40 | Holdout seeds 221–240: V3.4 → V3.6 wins / 40 |
+|---|---|---:|---:|
+| Caller | Rising | 40 → 40 | 40 → 40 |
+| Aggressive | Rising | 30 → 31 | 29 → 26 |
+| Tight | Rising | 29 → 28 | 30 → 33 |
+| Mixed | Rising | 23 → 24 | 29 → 28 |
+| Floorfix | Flat 50/100 | 34 → 35 | 32 → 33 |
+| **Raw wins per 200** | Mixed blind structures | **156 → 158** | **160 → 160** |
+| **Duplicate pairs W/D/L per 100** | Mixed blind structures | **59/38/3 → 60/38/2** | **62/36/2 → 63/34/3** |
+
+**Combined:** raw wins **316/400 → 318/400**. Duplicate pairs **121W/74D/5L → 123W/72D/5L** for V3.4 to V3.6 across both blocks. Marginal improvement; Aggressive **holdout regressed by three wins**, so V3.6 is *not yet an unqualified upgrade*.
+
+**Additional short-stack/ante stress:** 168 matches, covering stacks at **3.5, 7.5 and 12 big blinds**, antes and forced blind all-ins, V3.4 won **56/84** and V3.6 **61/84**. Duplicate-pair results **17W/22D/3L → 20W/21D/1L**. Preflop all-in showdown chip losses decreased **177,783 → 89,663** (approximately **49.6%** reduction) in the standard benchmark, although the **number of losing preflop all-in showdowns rose from 70 → 91** and **gross losses across all showdowns rose 3,050,508 → 3,115,636**. These outcome measures have different denominators; don't interpret chip-loss improvements as an EV proof.
+
+**Decision latency (local p95 / max):** development V3.4 **2.973 / 23.052 ms** → V3.6 **2.988 / 19.408 ms**; holdout **2.993 / 20.177 ms** → **3.021 / 21.414 ms**. Official restricted Docker sandbox still untested.
+
+**Coordinator recommendation:** V3.4 remains the protected *release fallback*; V3.6 is a promising focused upgrade for shallow stacks, **pending aggressive-opponent regression analysis and independent holdout validation**, particularly against Claude's new independently designed opponents. Preserve isolated V3.6 code and the V3.5 recovery artifacts; **do not commit/push/merge** V3.6 without explicit human approval. Avoid modifying or overwriting partner branches. Public `main` must receive a human-approved tested release before **6:30 PM ET**.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
