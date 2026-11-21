@@ -14,7 +14,7 @@
 - `main`: public submission branch. **The final validated strategy has not yet been promoted to main.** Shared documentation updates here are NOT a final submission.
 - `feature/strategy`: last verified committed bot **V3.2** at `cfab27c26222423b46b7293c6416785c7115369e` (`my_bots/uo_monte/bot.py`, `tests/test_uo_monte_bot.py`). Earlier baselines **V3.1** `c12396e` and **V2** `ef760ca` remain in history.
 - `alwaleed/exploit-and-testing`: partner's independent branch; its shared notes were incorporated into `main` for coordination. Do not merge it wholesale or overwrite teammate work.
-- **V3.3 adaptive aggression:** Codex CLI has been given a focused task; *work/results remain unverified here until the teammate reports back*. Do not assume V3.3 is ready, saved or tested.
+- **V3.3 adaptive aggression:** Codex CLI reports implementation and benchmarks completed locally with **32 tests, four official validator scenarios, and 800 local matches**, but V3.3 is **not committed or pushed**. Treat as a *provisional freeze candidate only* pending human approval and restricted-sandbox testing. V3.2 at `cfab27c` is the known-good committed fallback.
 
 ## Recent benchmark evidence
 Local matched-seed comparisons, 20 seeds × two starting seats per opponent (40 matches per version per opponent). Floorfix used **fixed 50/100 blinds**, and the custom opponents used **rising blinds**; the benchmark pool is not a representation of the true finalist field.
@@ -28,7 +28,7 @@ Local matched-seed comparisons, 20 seeds × two starting seats per opponent (40 
 | Fullhouse Floorfix | 23 | 26 | 34 |
 | **Total / 200** | **142** | **148** | **162** |
 
-V3.2 passed **29 unit tests** and the official validator at its saved checkpoint. Local benchmark errors/timeouts were reported as zero. This is evidence for development prioritization, **not a guarantee of tournament strength**. Full logs and version-by-version notes: `docs/testing.md` on `main`.
+V3.2 passed **29 unit tests** and the official validator at its saved checkpoint. V3.3 subsequently passed **32 tests** and the official validator locally. Across two 200-match blocks with development and unseen seeds, V3.3 recorded **318/400 wins** vs **316/400** for V3.2, with only the Aggressive opponent improving (by one match in each block). All other wins were unchanged. That small gain does **not** prove superiority. Full logs and version-by-version notes: `docs/testing.md` on `main`.
 
 ## Ownership
 | Area | Owner | Working branch |
@@ -57,10 +57,10 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 ### TASK-CLAUDE-001 — Independent opponent-model / benchmark QA audit
 **Assigned to:** Alwaleed's Claude. **Status:** Ready to read. **Permission:** READ-ONLY; no file edits, commits, pushes, merges or branch changes without human approval. Do not start parallel editing with Codex.
 
-**Objective:** Determine what valuable, non-overlapping tasks Claude can perform to strengthen UO-Monte and improve the reliability of our evaluation while Codex finishes its current V3.3 task.
+**Objective:** Determine what valuable, non-overlapping tasks Claude can perform to strengthen UO-Monte and improve the reliability of our evaluation. V3.3 has now been tested locally and is awaiting human release decision; **do not begin new strategy development**.
 
 **Instructions:**
-1. Read `origin/main:AGENTS.md`, this `HANDOFF.md`, `docs/testing.md`, and the latest **committed** `feature/strategy/my_bots/uo_monte/bot.py`. Do not treat possible local uncommitted V3.3 work as settled.
+1. Read `origin/main:AGENTS.md`, this `HANDOFF.md`, `docs/testing.md`, and the latest **committed** `feature/strategy/my_bots/uo_monte/bot.py`. V3.3 has been reported tested locally but remains uncommitted; treat committed V3.2 as the stable reference.
 2. Audit the methodology of paired-seed / seat-swap benchmarks. Identify evaluation gaps: sample size, seed reuse, independence, opponent strength, fixed versus rising blinds, failure logging, or decision-time measurement. Recommend a concise **holdout test plan** that has not already been used to tune V3.
 3. Review only permitted public game-state interfaces (`action_log`, `match_action_log`, showdown information legally revealed). Propose robust opponent statistics with correct denominators (opportunities), sample sizes, street distinctions, and shrinkage for sparse data. Flag misleading measures such as action frequencies where a player had no opportunity to act.
 4. Review interactions with existing `_opponent_history`, `_river_aggression`, `_river_range_equity`, `_stack_commitment` and current `estimate_equity`. Recommend an **optional, additive** proposed tracker API, e.g. `_opponent_stats(state: dict) -> dict`; an exploit adjustment may be proposed but must not replace existing logic without tests.
@@ -80,7 +80,7 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
-- [ ] V3.3 result and commit status awaiting primary teammate's Codex report.
+- [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
 - [ ] TASK-CLAUDE-001 report awaiting Alwaleed/Claude.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
