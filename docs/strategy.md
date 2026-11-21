@@ -2,6 +2,19 @@
 
 **Objective:** win duplicate freezeout pairings and the final heads-up bracket, not merely maximize cash-game bb/100. The original `bots/template/bot.py` is deliberately simple, and has been copied unchanged to the provisional entry `my_bots/poker_bot_hackathon/bot.py`.
 
+## Proposed competitive identity (not yet registered)
+
+Working name **UO-Monte**, pending team confirmation. Registered team name may be styled as UO-Monte; the required submission folder would be `my_bots/uo_monte/` (the current `poker_bot_hackathon` folder remains until the name is confirmed).
+
+The proposed strategy is **heads-up, stack-aware, exploitative hybrid**:
+- **Solid baseline:** position-aware heads-up preflop ranges, 3-bet/call rules, effective stack in big blinds, and tested short-stack shove/fold choices.
+- **Equity estimation:** `eval7`-based Monte Carlo on flop, turn and river, sampled from sensible opponent ranges, with deterministic seeds and hard computation budgets. Equity alone is not an action policy.
+- **Action EV:** pot odds for calls; sizing/fold equity/equity when called for raises; risk and changing blind structure for freezeouts. Avoid fixed arbitrary thresholds.
+- **Opponent adaptation:** exploit leaks using `match_action_log` and showdown reveals, only when the sample size justifies a change. Track by `bot_id`.
+- **Benchmarks:** test against callers, tight and aggressive opponents, matched seeds and swapped seats, with sandbox time measurements.
+
+**Do not** start with Deep CFR training, neural networks, or massive external datasets. Prioritize correct legal actions and a fast validated bot. The 2-second wall clock limit and half CPU are hard constraints.
+
 ## Upgrade sequence
 
 1. Robust legal actions and warmup handling.

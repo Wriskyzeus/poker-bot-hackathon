@@ -29,7 +29,7 @@ For verbose play: `python3 play.py my_bots/poker_bot_hackathon bots/caller --see
 
 ### Project documents
 
-- [Rules and API](docs/event-spec.md) · [Day checklist](docs/hackathon-checklist.md)
+- [Windows / WSL setup](docs/windows-setup.md) · [Rules and API](docs/event-spec.md) · [Day checklist](docs/hackathon-checklist.md)
 - [Architecture](docs/architecture.md) · [Strategy](docs/strategy.md)
 - [Testing](docs/testing.md) · [Team workflow](docs/team-workflow.md)
 - [Original organizers' README](docs/official-starter-kit.md) · [Research references](docs/resources.md)
