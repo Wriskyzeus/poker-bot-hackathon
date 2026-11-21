@@ -43,12 +43,14 @@ No network or external LLM calls during play; no file writes, subprocesses, shel
 
 Qualification is decided by pairing wins/draws; top four advance to knockout. The $750 prize pool also includes judged exploitative/game-theoretic strategies and measured bluffing, seven-two, comeback, and lowest-winning-showdown categories. See original README for exact metrics and minimum thresholds.
 
-## Still requires confirmation
+## Confirmed directly with organizers (as reported verbally by team, November 21, 2026)
 
-- Exact coding and submission cutoff time.
-- Team name: chosen display name **UO-Monte**, required submission identifier **`uo_monte`**; verify the submission form has been completed using that exact identifier.
-- Whether using AI assistance **during development** is permitted; this is distinct from the explicitly forbidden in-game LLM API calls.
+- **Submission cutoff: 6:30 PM Eastern Time, November 21, 2026.** Team reported this directly from organizer; preserve the exact deadline.
+- **Open-source bot use:** permitted for offline practice, and adaptation of properly licensed public code is permitted subject to license and runtime restrictions.
+- **External pretrained models / strategy tables:** permitted within published data size, import-time read, and runtime restrictions.
+- **AI-assisted development:** Codex permitted for coding; no live AI/network calls from the submitted bot.
+- **Still to verify before submitting:** form submitted using exact identifier `uo_monte`; repo public; final best tested code pushed to `main` before 6:30 PM.
 
 ## Schedule note
 
-The attendee-reported event schedule is **9:30 AM–10:00 PM on November 21, 2026**. The starter kit's README header says **9:00 AM–10:00 PM**. Confirm check-in time directly with the organizers. Neither end time establishes the exact code cutoff; ask before assuming submissions are accepted until 10 PM.
+The attendee-reported event schedule is **9:30 AM–10:00 PM on November 21, 2026**. The starter kit's README header says **9:00 AM–10:00 PM**. Confirm check-in time directly with the organizers. The team subsequently confirmed a separate **6:30 PM ET submission cutoff** with the organizers; do not treat 10 PM as the coding deadline.
