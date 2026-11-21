@@ -1,6 +1,6 @@
 # External poker-bot benchmarking — candidate research and rules gate
 
-**Prepared 2026-11-21. Status: organizer permission reported verbally by UO-Monte team.** Team reports the organizers approved all four questions: (1) public open-source bots as offline practice opponents, (2) studying/adapting open-source code with license compliance, (3) pretrained model weights/strategy tables within submission limits, and (4) Codex/AI coding assistance during development. This is team-reported verbal guidance, not an independent written policy update. **The original runtime restrictions and ban on peeking at active tournament entries still apply.** This file documents a plan, not any completed external-bot benchmark.
+**Prepared 2026-11-21. Status: organizer permission reported verbally by UO-Monte team.** Team reports the organizers approved all four questions: (1) public open-source bots as offline practice opponents, (2) studying/adapting open-source code with license compliance, (3) pretrained model weights/strategy tables within submission limits, and (4) Codex/AI coding assistance during development. This is team-reported verbal guidance, not an independent written policy update. **Additional verbal clarification:** organizers do not want teams to copy-paste another finalist's bot as their own submission. Use external bots for offline benchmarking and learning, not as a wholesale replacement for independently developed UO-Monte code. Original runtime restrictions and the ban on peeking at active tournament entries still apply. This file documents a plan, not any completed external-bot benchmark.
 
 ## Why do this?
 
@@ -25,7 +25,7 @@ Ask:
 3. Are **externally pretrained** model weights or precomputed strategy tables allowed in `my_bots/<team_name>/data/` (subject to published sizes/import-time reads)? The kit allows generic data files, but does not explicitly resolve third-party model provenance.
 4. Is AI-assisted coding during development (e.g. local Codex CLI) permitted? The rule explicitly bans **live** network/LLM calls from the submitted bot.
 
-**Status:** On November 21, the team reported the organizer said **yes to all four questions**. Public historical GitHub code can be considered for offline benchmarking; licensed reuse and pretrained weights are allowed subject to license and all published tournament restrictions. Avoid interpreting this as permission to inspect an active participant's private or unpublished entry, collude, or bypass sandbox limits.
+**Status:** On November 21, the team reported the organizer said **yes to all four questions**. Public historical GitHub code can be considered for offline benchmarking; licensed algorithms, ideas and pretrained weights may inform our work subject to license and all published tournament restrictions, **but the user reports an explicit prohibition on copying another finalist's bot wholesale into the submitted entry**. Avoid interpreting this as permission to inspect an active participant's private or unpublished entry, collude, or bypass sandbox limits.
 
 ## Meanwhile: compliant-looking test development
 
