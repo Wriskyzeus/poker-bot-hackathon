@@ -1,10 +1,10 @@
 # Heads-up poker bot strategy
 
-**Objective:** win duplicate freezeout pairings and the final heads-up bracket, not merely maximize cash-game bb/100. The original `bots/template/bot.py` is deliberately simple, and has been copied unchanged to the provisional entry `my_bots/poker_bot_hackathon/bot.py`.
+**Objective:** win duplicate freezeout pairings and the final heads-up bracket, not merely maximize cash-game bb/100. The original `bots/template/bot.py` is deliberately simple, and has been copied unchanged to the team entry `my_bots/uo_monte/bot.py`.
 
-## Proposed competitive identity (not yet registered)
+## Team identity and competitive plan
 
-Working name **UO-Monte**, pending team confirmation. Registered team name may be styled as UO-Monte; the required submission folder would be `my_bots/uo_monte/` (the current `poker_bot_hackathon` folder remains until the name is confirmed).
+The team name is **UO-Monte**; the official submission identifier and folder name must be **`uo_monte`**. The name is chosen but the submission form still needs to be filed.
 
 The proposed strategy is **heads-up, stack-aware, exploitative hybrid**:
 - **Solid baseline:** position-aware heads-up preflop ranges, 3-bet/call rules, effective stack in big blinds, and tested short-stack shove/fold choices.

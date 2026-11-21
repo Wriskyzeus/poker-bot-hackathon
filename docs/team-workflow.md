@@ -2,7 +2,7 @@
 
 - `main`: tested submission code.
 - `feature/engine-integration`: entry-point validation, runtime, imports and sandbox.
-- `feature/strategy`: algorithm changes in `my_bots/<team_name>/bot.py`.
+- `feature/strategy`: algorithm changes in `my_bots/uo_monte/bot.py`.
 - `feature/benchmarking`: extra local tests and match reports, which are not submitted.
 
 ```bash

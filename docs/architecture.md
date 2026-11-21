@@ -1,6 +1,6 @@
 # Tournament-compatible bot architecture
 
-Only `my_bots/<team_name>/bot.py` and optional `data/` are submitted. Keep any runtime helpers in that bot file or otherwise conform to the submission contract. Don't modify `pokercore/` or rely on modules from `src/` that won't be collected.
+Only `my_bots/uo_monte/bot.py` and optional `data/` are submitted. Keep any runtime helpers in that bot file or otherwise conform to the submission contract. Don't modify `pokercore/` or rely on modules from `src/` that won't be collected.
 
 ```text
 game_state dictionary / warmup

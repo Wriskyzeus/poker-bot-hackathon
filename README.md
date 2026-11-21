@@ -1,4 +1,4 @@
-# Poker Bot Hackathon — IEEE uOttawa × LARUS
+# UO-Monte — IEEE uOttawa × LARUS Poker Bot
 
 Two-person Python poker-bot project for the November 21, 2026 hackathon.
 
@@ -8,7 +8,7 @@ Two-person Python poker-bot project for the November 21, 2026 hackathon.
 
 This repo incorporates the [official organizer starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit): actual tournament engine (`pokercore/`), bot template (`bots/template/`), reference caller (`bots/caller/`), runner (`play.py`), validator, and pinned dependencies. **Don't edit `pokercore/`.**
 
-An unchanged template bot is at **`my_bots/poker_bot_hackathon/bot.py`**. The `poker_bot_hackathon` name is **provisional**. The submission folder **must equal your registered team name** (lowercase letters, digits, underscores). Rename it before submitting if necessary.
+Our team is **UO-Monte**. For the official submission, enter the exact identifier **`uo_monte`** as the team name, matching our entry at **`my_bots/uo_monte/bot.py`** (the rules require lowercase letters, digits and underscores). The entry currently contains the unchanged organizer template.
 
 ### Run locally — Windows
 
@@ -21,11 +21,13 @@ uv python install 3.10
 uv venv --seed -p 3.10 .venv
 source .venv/bin/activate
 make install
-python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7
-make validate BOT=my_bots/poker_bot_hackathon
+python3 play.py my_bots/uo_monte bots/caller --seed 7
+make validate BOT=my_bots/uo_monte
 ```
 
-For verbose play: `python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --show`. For full sandbox testing: `make sandbox`, then `python3 play.py my_bots/poker_bot_hackathon bots/caller --docker` (requires Docker).
+For verbose play: `python3 play.py my_bots/uo_monte bots/caller --seed 7 --show`. For full sandbox testing: `make sandbox`, then `python3 play.py my_bots/uo_monte bots/caller --docker` (requires Docker).
+
+**Competition approach:** Keep a validated baseline first, then develop stack-aware heads-up preflop decisions, fast Monte Carlo equity estimates, and opponent exploitation. See [build milestones](docs/build-milestones.md) for the order of work.
 
 ### Project documents
 
@@ -36,7 +38,7 @@ For verbose play: `python3 play.py my_bots/poker_bot_hackathon bots/caller --see
 
 ## Submission
 
-Only `my_bots/<exact_team_name>/` is collected, with `bot.py` and optional `data/`. Validate with `make validate BOT=my_bots/<exact_team_name>`, complete the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform), and commit the final bot to **public `main` before the organizers' deadline**. The exact cutoff time has not yet been confirmed.
+Only `my_bots/uo_monte/` is collected, with `bot.py` and optional `data/`. Validate with `make validate BOT=my_bots/uo_monte`, complete the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform), and commit the final bot to **public `main` before the organizers' deadline**. The exact cutoff time has not yet been confirmed; the event end time is not automatically the code deadline.
 
 ## Development rules
 

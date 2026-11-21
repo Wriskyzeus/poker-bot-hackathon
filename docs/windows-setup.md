@@ -59,17 +59,17 @@ make install
 ## 6. First match and validator
 
 ```bash
-python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7
-make validate BOT=my_bots/poker_bot_hackathon
+python3 play.py my_bots/uo_monte bots/caller --seed 7
+make validate BOT=my_bots/uo_monte
 ```
 
 Optional detailed hand log:
 
 ```bash
-python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --show
+python3 play.py my_bots/uo_monte bots/caller --seed 7 --show
 ```
 
-**Important:** `poker_bot_hackathon` is a temporary team folder; replace it in these commands if your team registers as `uo_monte` or another name.
+**Important:** UO-Monte's submission identifier is `uo_monte`; use that exact value in the submission form and keep the matching folder.
 
 ## 7. Open in VS Code
 
@@ -84,7 +84,7 @@ If you have time, install Docker Desktop for Windows, enable its WSL 2 backend a
 ```bash
 docker --version
 make sandbox
-python3 play.py my_bots/poker_bot_hackathon bots/caller --docker
+python3 play.py my_bots/uo_monte bots/caller --docker
 ```
 
 Docker provides the closest test to the competition's **0.5 CPU core, 768 MB, no-network** runtime. The normal validator is usable without Docker.

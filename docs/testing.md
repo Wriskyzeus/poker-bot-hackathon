@@ -4,15 +4,15 @@ Use **organizer's own** `play.py`, not other Fullhouse implementations.
 
 ```bash
 make install
-python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7
-python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --show
-python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --log match.jsonl
-make validate BOT=my_bots/poker_bot_hackathon
+python3 play.py my_bots/uo_monte bots/caller --seed 7
+python3 play.py my_bots/uo_monte bots/caller --seed 7 --show
+python3 play.py my_bots/uo_monte bots/caller --seed 7 --log match.jsonl
+make validate BOT=my_bots/uo_monte
 make sandbox
-python3 play.py my_bots/poker_bot_hackathon bots/caller --docker
+python3 play.py my_bots/uo_monte bots/caller --docker
 ```
 
-Replace provisional team name in commands when confirmed. `make sandbox` / `--docker` require Docker; `make validate` does not.
+`make sandbox` / `--docker` require Docker; `make validate` does not.
 
 ## Checklist
 

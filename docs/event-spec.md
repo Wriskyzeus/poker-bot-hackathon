@@ -46,5 +46,9 @@ Qualification is decided by pairing wins/draws; top four advance to knockout. Th
 ## Still requires confirmation
 
 - Exact coding and submission cutoff time.
-- Team name as entered on submission form.
+- Team name: chosen display name **UO-Monte**, required submission identifier **`uo_monte`**; verify the submission form has been completed using that exact identifier.
 - Whether using AI assistance **during development** is permitted; this is distinct from the explicitly forbidden in-game LLM API calls.
+
+## Schedule note
+
+The attendee-reported event schedule is **9:30 AM–10:00 PM on November 21, 2026**. The starter kit's README header says **9:00 AM–10:00 PM**. Confirm check-in time directly with the organizers. Neither end time establishes the exact code cutoff; ask before assuming submissions are accepted until 10 PM.
