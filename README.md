@@ -8,7 +8,7 @@ Two-person Python poker-bot project for the November 21, 2026 hackathon.
 
 This repo incorporates the [official organizer starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit): actual tournament engine (`pokercore/`), bot template (`bots/template/`), reference caller (`bots/caller/`), runner (`play.py`), validator, and pinned dependencies. **Don't edit `pokercore/`.**
 
-Our team is **UO-Monte**. For the official submission, enter the exact identifier **`uo_monte`** as the team name, matching our entry at **`my_bots/uo_monte/bot.py`** (the rules require lowercase letters, digits and underscores). The entry currently contains the unchanged organizer template.
+Our team is **UO-Monte**. For the official submission, enter the exact identifier **`uo_monte`** as the team name, matching our entry at **`my_bots/uo_monte/bot.py`** (the rules require lowercase letters, digits and underscores). The submitted entry contains **UO-Monte V3.4**, our final tested rule-based and simulation-assisted poker strategy—not the starter template. The official submission folder is `my_bots/uo_monte/`; only the team's bot is collected.
 
 ### Run locally — Windows
 
@@ -27,7 +27,7 @@ make validate BOT=my_bots/uo_monte
 
 For verbose play: `python3 play.py my_bots/uo_monte bots/caller --seed 7 --show`. For full sandbox testing: `make sandbox`, then `python3 play.py my_bots/uo_monte bots/caller --docker` (requires Docker).
 
-**Competition approach:** Keep a validated baseline first, then develop stack-aware heads-up preflop decisions, fast Monte Carlo equity estimates, and opponent exploitation. See [build milestones](docs/build-milestones.md) for the order of work.
+**Final strategy (V3.4):** Stack-aware heads-up preflop scoring and opening/defense, bounded Monte Carlo showdown-equity estimates using `eval7`, pot-odds/stack-commitment analysis on flop and turn, selective river value-betting and opponent-conditioned defensive adjustments from public actions. This is a heuristic poker policy, **not a solved/GTO or live LLM system**. Alternate V4–V6 strategies were experimentally evaluated but did not establish a reliable generalization improvement; see the [testing history](docs/testing.md).
 
 ### Project documents
 
@@ -38,10 +38,10 @@ For verbose play: `python3 play.py my_bots/uo_monte bots/caller --seed 7 --show`
 
 ## Submission
 
-Only `my_bots/uo_monte/` is collected, with `bot.py` and optional `data/`. Validate with `make validate BOT=my_bots/uo_monte`, complete the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform), and commit the final bot to **public `main` before the organizers' deadline**. The exact cutoff time has not yet been confirmed; the event end time is not automatically the code deadline.
+Only `my_bots/uo_monte/` is collected, with `bot.py` and optional `data/`. Validate with `make validate BOT=my_bots/uo_monte`, complete the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform), and commit the final bot to **public `main` before the organizers' deadline**. The team was told the actual submission cutoff is **6:30 PM Eastern on November 21, 2026**. Team members confirmed submitting the registration form; preserve the confirmation receipt. The public `main` branch already holds final V3.4.
 
 ## Development rules
 
 Keep `main` runnable. Use `feature/strategy`, `feature/engine-integration`, `feature/benchmarking` for experimental work. The validator restricts imports, file writes, network calls, background work and other sandbox operations. **Only the chosen bot folder is shipped; do not depend on local `src/` helpers outside that folder.**
 
-The kit is copied from [FreddyyAndrews/poker-hackathon-kit](https://github.com/FreddyyAndrews/poker-hackathon-kit) under its MIT `LICENSE`. The starter bot is unchanged; no benchmarks or performance improvements are claimed yet.
+The kit is copied from [FreddyyAndrews/poker-hackathon-kit](https://github.com/FreddyyAndrews/poker-hackathon-kit) under its MIT `LICENSE`. UO-Monte's `bot.py` is original team strategy code built on top of the official starter-kit interface; the rest of the organizer's engine remains unmodified. **Final bot:** protected V3.4 at `feature/strategy@a5ea561ff5b70d5a17533579bfc6557b2979622b`; released `bot.py` Git blob `27acb669ee3ac35172a88293c198182b56db0f78`. It passed the official validator and extensive local matched-seat matches. The restricted Docker 0.5-CPU/768MB tournament sandbox was not independently tested; competition performance is not guaranteed. Detailed evaluation records and experiment limitations appear in [docs/testing.md](docs/testing.md).
