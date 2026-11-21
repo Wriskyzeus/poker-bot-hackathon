@@ -478,6 +478,29 @@ Total hand net reported **+1,272,000 chips vs Overfolder** and **+1,216,000 chip
 
 **Coordinator decision:** Retain V3.4. Further marginal sizing rules are poor expected value for remaining hackathon time. The **higher-leverage hypothesis** from Claude TASK-004 is opponent-conditional bet defense: weak flop/turn float calls, overcalling large river value bets, and failing to recognize strong check-raises against value-heavy opponents. Future **calibrated opponent range and action-EV** work must include bluff-capable opponents and Bayesian shrinkage, not hardcoded folds to Overfolder/Trapper. Research into externally licensed CFR tables continues separately under Claude TASK-005 until rights and table applicability are confirmed. Do not edit public `main` strategy or promote any experimental version without human release authorization.
 
+## Claude TASK-CLAUDE-005 — own-solver push/fold feasibility and licensing audit (November 21, 2026)
+
+**Source:** Human uploaded `TASK-005-package.zip`, with seven files: `REPORT.md`, `nash_tables.json`, `short_analysis.json`, `equity_matrix.py`, `pushfold_solver.py`, `analyze_short.py`, `raise_outcome.py`. Claude reports **no UO-Monte bot code modifications or commits**, no `pokercore/` edits, and sealed seeds **1001–1200** unused. Report's V3.4 source baseline `a5ea561`.
+
+### Result and recommendation
+
+**NO-GO** for wholesale preflop solver-chart replacement as a large improvement. Claude's model is **heads-up SB push/fold versus BB call/fold**, not full no-limit preflop strategy with limps, min-raises, 3-bets and 4-bets. Its V3.4 mismatch figures apply **only to V3.4 jam/fold choices** (non-all-in raises omitted) against the model's Nash BB strategy. Reported approximate marginal loss ranges: **≤5BB 0.047 bb/eligible spot (578 spots, 201 disagreements)**, **5–8BB 0.014 (744 spots, 114 disagreements)**, **8–12BB 0.010 (625 spots, 65 disagreements)**, **12–15BB 0.005 (247 spots, 13 disagreements)**. Many disagreements were SB folding marginal combos where the restricted model would jam. This is **not** a measurement that replacing V3.4 with a chart yields those bb/match in the real tournament. Non-all-in raises make up a large part of V3.4's decisions and cannot be evaluated in a two-action model. Report recommends **larger potential** in opponent-range-conditioned equity and fold/call/raise EV, already underway in Codex TASK-CODEX-007 / V4. Research-only optional micro-experiment later: ≤~6BB SB push/fold lookup if spare time and separately justified.
+
+### Independent checks actually performed on uploaded package
+
+- `nash_tables.json` SHA-256 independently recalculated: `ab3f8721604e06d657e924b12eccec05257975af49c5b171e0625a57170b927e` (matches report prefix).
+- Contains exactly **169 distinct preflop hand classes** and **18** depth/ante cells: effective stacks **3,4,5,6,7,8,10,12,15 BB × ante 0 or 0.1 BB**. Every cell has **169 jam** and **169 call** numeric probabilities, each within **[0,1]**. This validates table structure only, **not Nash accuracy**.
+- Reviewed supplied `pushfold_solver.py` and `equity_matrix.py`; its intended zero-sum payoff tree and regret matching are plausible. The report claims **≤0.0095 milli-BB/hand calculated exploitability** on the internally modeled payoff matrix, but the **equity.npy**, **weights.npy**, **classes.json** and original TASK-004 **full raw match logs** were **not included** in TASK-005 ZIP. Thus the full solver/table generation, reported low model exploitability, 100k-iteration equity calculation, and replayed V3.4 EV estimates **cannot be independently reproduced from this package**. The `chirenonhive` CLI cross-check reportedly **timed out**.
+- The report says the actual tournament blind schedule is unknown; **correction:** the organizers' published starter-kit lists it exactly (blinds every 20 hands, antes starting on hands 101–120). What is **not validated** is the solver's representation of the full strategy tree and chip accounting under all those transitions. Separate `flat10bb` results are **artificial stress tests**, not the entire tournament.
+- Some TASK-004 hand/chip-loss figures are observational **net losses after a line**, not causal estimates of EV that a new fold/call rule could recover. Do **not** extrapolate a "two orders of magnitude" performance improvement from them.
+
+### Independent source-license spot check
+
+Using exact pinned upstream SHAs from the report, independently opened repository `LICENSE` files for **MIT**: `noambrown/poker_solver` `6a10442877ffc8fd28af93e16e279b9bbdd97b2a`, `cRITlamb/poker_solver` `f78f1b2bc338dd8cbb5226ecb8398bbdb3635676`, `chirenonhive/poker-solver` `6d54d3725c50d5e74c8971723a616eb52d664f3c`, and `matteo-psnt/poker-solver` `3e1bcd10ca9113f0350a3a2aa49ebd0cdacf6ce4`. `bupticybee/TexasSolver` at `00f4f16d1c11af53d3b32d04f27432616d50cdde` contains **AGPL-3.0**. `jensbaagaard/poker-practice` `LICENSE` not present at pinned `449993f78d995c77b72d0bcac418a8507dd6f783`; treat as unlicensed/unverified, no code/chart copy. License of an upstream code repository does **not** alone establish rights to every separately sourced chart or pretrained artifact; independent provenance still needed. No code or charts from upstream were put in the submitted bot. User-reported organizer permission to adapt properly licensed code is **verbal**; uncertain third-party incorporation requires direct confirmation.
+
+**No promotion, no publication approval.** Keep V3.4 protected until V4 from Codex is reviewed on fresh, bluff-diverse holdouts. Claude TASK-CLAUDE-006 should independently create realistic bluff/value, preflop pressure, and adaptive stress opponents on its benchmark branch, testing only with public game observations; no edits to Codex's active V4 or the tournament submission.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
