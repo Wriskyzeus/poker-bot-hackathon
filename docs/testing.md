@@ -501,6 +501,35 @@ Using exact pinned upstream SHAs from the report, independently opened repositor
 **No promotion, no publication approval.** Keep V3.4 protected until V4 from Codex is reviewed on fresh, bluff-diverse holdouts. Claude TASK-CLAUDE-006 should independently create realistic bluff/value, preflop pressure, and adaptive stress opponents on its benchmark branch, testing only with public game observations; no edits to Codex's active V4 or the tournament submission.
 
 
+## Version 4 opponent tracker and range-conditioned action-EV — November 21, 2026
+
+**Source:** user-supplied Codex CLI screenshots of completed TASK-CODEX-007. This is a reported local experiment; coordinator has **not independently rerun or inspected its uncommitted code**. V4 remains uncommitted in isolated worktree and previous V3.5/V3.6/V3.6.1/V3.7 recovery artifacts remain intact. Remote `feature/strategy` is still committed V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`; **no release or Git publication occurred**.
+
+**Implementation and validation:** V4 keeps cumulative **match-local** betting, raising, calling, folding-opportunity statistics beyond the official rolling **200-entry `match_action_log`**, with deduplicated completed public hands, handling truncated prefixes and resetting at warmup. It uses showdown hand evidence only once those cards are revealed and relevant board cards have been seen. On a **453-hand official-log replay** the tracker exactly matched **all 355** recorded postflop opportunity counts, per Codex. Defensive policy weights plausible opponent combos by blockers, preflop aggression, street, position, bet sizing and stack pressure, then approximates **fold/call/raise EV**, falling back to V3.4 when evidence is sparse or the modeled EV difference small. V3.4 preflop and check-is-free logic preserved.
+
+**Matched-seat benchmark (wins/40), V3.4 → V4:**
+
+| Opponent | Dev seeds 481–500 | Frozen holdout seeds 501–520 |
+|---|---:|---:|
+| Caller, rising blinds | 40 → 40 | 39 → 39 |
+| Aggressive, rising | 28 → 28 | 37 → 37 |
+| Tight, rising | 30 → 31 | 35 → 35 |
+| Mixed, rising | 24 → 23 | 23 → 24 |
+| Floorfix, flat 50/100 | 33 → 31 | 32 → 31 |
+| **Raw wins/200** | **155 → 153** | **166 → 166** |
+| **Duplicate pair W/D/L/100** | **57/41/2 → 56/41/3** | **68/30/2 → 68/30/2** |
+
+**Combined** raw match wins **321/400 V3.4 vs 319/400 V4**, duplicate pair outcomes **125W/71D/4L vs 124W/71D/5L**. V4 **changed 74/8,192** defensive decisions (approximately 0.90%): **30 calls → folds**, **25 folds → calls**, **19 calls → raises**. It retained the baseline action in **3,430** low-evidence spots. The changes clustered late in the match (**1 hands 1–20; 13 hands 21–60; 60 after hand 60**). Across dev+holdout gross showdown losses increased **3,029,896 → 3,064,370 chips**. These are realized outcomes; not a direct unbiased estimate of marginal EV.
+
+**Representative opposite raise outcomes:** On holdout seed **513** vs Mixed, V4 raised top pair **AK** and reportedly won **6,026** net chips; on seed **518** vs Floorfix, V4 raised **QJ** on **K-Q-T** and lost **5,307**, whereas V3.4 would have called. Because the candidate raise-EV calculation accounts for fold/call outcomes but incompletely models *subsequent reraises*, this is a targeted audit priority; two cases cannot establish the best general strategy.
+
+**Independent toy diagnostics:** Overfolder and Trapper seeds **521–530**, both versions won **15/20** against Overfolder and **16/20** against Trapper, with pair-level **11W/9D/0L** as reported. Three defensive actions differed. Both toy opponents are nonbluffing; strong improvements cannot be inferred from their matching win rates.
+
+**Runtime/integration:** Python **3.10.22**; **45 unit tests** passed and all **four official validator scenarios** passed. Codex reported **880 paired comparison matches plus 24 standalone baseline diagnostic matches**, zero errors/timeouts/restarts. Local development p95/max latency **3.001/23.699ms → 3.385/27.958ms**; holdout **3.029/23.977ms → 3.386/32.279ms**. **Official Docker restricted 0.5CPU/768MB sandbox still unavailable locally**; cannot infer sandbox compliance from laptop timing alone. Final sealed seeds **1001–1200** unused.
+
+**Coordinator decision:** **Keep committed V3.4 as protected release candidate.** V4 showed technically sound match-local memory and legally obtained public-game observations, but its action policy **did not improve frozen holdout wins** and worsened two other metrics. Preserve V4 memory tracker and EV code as a recoverable experiment, **not** as automatically deployable bot strategy. Next priority is a narrow **counterfactual EV calibration / ablation** across V3.4, V4 and V4-with-raises-disabled, testing delayed adaptation and rejecting uncalibrated raise decisions, followed by truly independent bluff-capable opponents from Claude TASK-006. Verify competitor legality and prevent an unapproved release. At **5:30 PM ET**, prioritize approved public `main` deployment of the best validated candidate; hard cutoff reported **6:30 PM ET**.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
