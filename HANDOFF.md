@@ -77,11 +77,24 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 
 **No source modifications or Git writes for this task.** Partner should share Claude's report with ChatGPT for review; subsequent tasks will be assigned in this file only after human approval.
 
+### TASK-CODEX-002 — Parallel development: V3.4 river value-betting / check-raise resilience
+**Assigned to:** Primary teammate's local Codex CLI. **Status:** Authorized for *local development and testing* while Claude completes TASK-CLAUDE-001. **Git writes:** Require human approval before any commit or push. **Branch:** `feature/strategy`.
+
+**Scope:**
+1. Inspect V3.3 local changes and current Git status. Recheck 32 unit tests + official validator. Keep V3.2 (`cfab27c`) as saved fallback. Request explicit human approval for a V3.3 checkpoint commit/push to `feature/strategy`; no `main` changes.
+2. Develop **V3.4** around an independent remaining leak: *river value bets when checking is free*. Review the previous Mixed opponent loss analysis (thin river value-bets and costly check-raises) and the Floorfix holdout. Add board-texture / showdown-value considerations and bet-sizing / check-back discipline without disturbing V3.3's *facing river bet*, preflop, or flop/turn defenses except where indispensable and documented. Do not hardcode to named bots/seeds.
+3. Benchmark against saved V3.3 with development and unused holdout seeds, both seats, Caller/Aggressive/Tight/Mixed and Floorfix (label Floorfix's flat blinds). Inspect value-bet EV versus checking, check-raise loss, all-in volatility, errors and p95/max timing.
+4. Run full unit tests and official validator. Optionally run the official Docker sandbox after confirming installation. **Do not commit/push V3.4, merge into `main`, modify `pokercore/`, or touch Claude files until the human reviews the results.**
+5. Report exact file changes, V3.4 benchmark evidence and regressions. Stop at that checkpoint. If the strategy regression is worse than V3.3, recommend keeping V3.3.
+
+**Concurrency:** Claude independently performs TASK-CLAUDE-001 as **read-only research/QA** on Alwaleed's branch, not edits to `bot.py`. The two tasks are intentionally separate. A new Claude coding assignment requires human approval after Claude's report.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
-- [ ] TASK-CLAUDE-001 report awaiting Alwaleed/Claude.
+- [ ] TASK-CLAUDE-001 report awaiting Alwaleed/Claude (runs concurrently with Codex V3.4 local development).
+- [ ] TASK-CODEX-002 V3.4 river value-betting local task assigned; V3.3 checkpoint Git write and all later writes still require human approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
