@@ -1,4 +1,4 @@
-"""UO-Monte 3.2: preflop ranges, stack-aware postflop play, and river defense.
+"""UO-Monte 3.3: stack-aware play and adaptation to sustained aggression.
 
 The ranges are coarse heuristics, not a solved/GTO chart.  They trade mixed
 strategy precision for fast, reproducible decisions and legal actions.
@@ -262,6 +262,44 @@ def _river_aggression(state, opponent):
     return (4 * earlier + river_bets) / (4 + river_chances)
 
 
+def _wide_betting_evidence(state, opponent):
+    """Estimate whether bets are routinely made outside a selective value range.
+
+    Require aggression across distinct prior hands and across streets. Counting
+    the first decision prevents a single raising war from driving the estimate.
+    These frequencies are evidence of a wide range, with no direct bluff labels.
+    """
+    if opponent is None:
+        return 0.0
+    seen = set()
+    preflop = preflop_bets = postflop = postflop_bets = 0
+    postflop_hands = set()
+    for event in state.get("match_action_log", []):
+        hand, street = event.get("hand_num"), event.get("street")
+        action = event.get("action")
+        key = (hand, street)
+        if (event.get("bot_id") != opponent or hand is None or hand == state.get("hand_num")
+                or street not in ("preflop", "flop", "turn", "river") or key in seen
+                or action not in ("check", "call", "fold", "raise", "all_in")):
+            continue
+        seen.add(key)
+        aggressive = action in ("raise", "all_in")
+        if street == "preflop":
+            preflop += 1
+            preflop_bets += aggressive
+        else:
+            postflop += 1
+            postflop_bets += aggressive
+            postflop_hands.add(hand)
+
+    if preflop < 6 or len(postflop_hands) < 4 or postflop < 8:
+        return 0.0
+    opening_rate = (preflop_bets + 1) / (preflop + 3)
+    betting_rate = (postflop_bets + 1) / (postflop + 3)
+    return min(1.0, max(0.0, (opening_rate - 0.42) / 0.18),
+               max(0.0, (betting_rate - 0.48) / 0.22))
+
+
 def _river_range_equity(state):
     """Return equity against the betting range and a tighter raise-calling range."""
     hole = _card_strings(state.get("your_cards", []))
@@ -301,6 +339,11 @@ def _river_range_equity(state):
     value_width = max(0.08, 0.16 + 0.42 * aggression - 0.20 * pressure)
     value_equity = equity_from(int((1 - value_width) * len(ranks)))
     continuing = equity_from(int((1 - value_width * 0.5) * len(ranks)))
+    # Widen bluff-catching only on an initial bet. A raise after we show
+    # strength still receives the original river treatment.
+    if street_raises <= 1:
+        wide = _wide_betting_evidence(state, opponent)
+        broad_weight += wide * max(0.0, 0.92 - broad_weight)
     return broad_weight * equity_from(0) + (1 - broad_weight) * value_equity, continuing
 
 
@@ -416,6 +459,9 @@ def _stack_commitment(state, owed, pot):
                    + 0.60 * max(0, price - 0.22) + 0.40 * max(0, fraction - 0.25))
     broad = min(0.96, max(0.15, 0.80 + 0.30 * aggression - pressure * (0.72 - 0.48 * aggression)))
     width = max(0.10, 0.22 + 0.43 * aggression - 0.17 * pressure)
+    wide = _wide_betting_evidence(state, opponent) if raises <= 1 else 0.0
+    broad += wide * max(0.0, 0.96 - broad)
+    width += 0.12 * wide
     deck = [eval7.Card(card) for card in _remaining_cards(hole + board)]
     equity, value_equity = _commitment_equity(state, hero, community, deck, broad, width)
 
@@ -424,7 +470,7 @@ def _stack_commitment(state, owed, pot):
     two_pair = hand in ("two pair", "trips")
     # Calls preserve bluff-catching. Extra caution applies when a marginal
     # made hand risks a large fraction of a stack after repeated aggression.
-    margin = 0.05 + 0.12 * pressure * (1 - aggression)
+    margin = 0.05 + 0.12 * pressure * (1 - aggression) - 0.025 * wide
     if (pair or two_pair) and raises >= 2 and fraction >= 0.35:
         margin += 0.12 * (1 - aggression)
     if draw and spr <= 0.5:
@@ -433,6 +479,12 @@ def _stack_commitment(state, owed, pot):
         return _respond("fold", state)
 
     can_raise = effective > owed and (opponent_stack is None or opponent_stack > 0)
+    # Take a single value raise with strong one-pair holdings at moderate
+    # SPR when the price of the smallest raise still leaves room to fold.
+    extra = state["min_raise_to"] - state["your_bet_this_street"] - owed
+    adaptive_raise = (wide >= 0.55 and pair and 0.65 < spr <= 2.5
+                      and fraction <= 0.25 and 0 < extra <= 0.20 * (effective - paid)
+                      and equity >= 0.78 and value_equity >= 0.58)
     value_raise = (
         strong and value_equity >= (0.62 if raises < 2 else 0.72)
         or two_pair and raises < 2 and value_equity >= 0.65
@@ -445,6 +497,8 @@ def _stack_commitment(state, owed, pot):
             return _respond(min(proposed, effective_target), state)
         if own_stack == effective:
             return _respond("all_in", state)
+    if can_raise and adaptive_raise:
+        return _respond(state["min_raise_to"], state)
     return _respond("call", state)
 
 

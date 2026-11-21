@@ -248,6 +248,58 @@ class StackCommitmentTests(unittest.TestCase):
         self.assertEqual(BOT.decide(state), {"action": "call"})
 
 
+class AdaptiveAggressionTests(unittest.TestCase):
+    def history(self, preflop="raise", postflop="raise", hands=10):
+        return [{"bot_id": "opponent", "hand_num": hand, "street": street,
+                 "action": preflop if street == "preflop" else postflop}
+                for hand in range(hands)
+                for street in ("preflop", "flop", "turn", "river")]
+
+    def test_evidence_requires_repeated_wide_preflop_and_postflop_play(self):
+        for history, expected in (
+            (self.history(), 1.0),
+            (self.history(preflop="call"), 0.0),
+            (self.history(postflop="check"), 0.0),
+            (self.history(hands=1) * 50, 0.0),
+            (self.history(hands=6)[-4:] * 50, 0.0),
+        ):
+            with self.subTest(expected=expected, events=len(history)):
+                game_state = state(hand_num=20, match_action_log=history)
+                self.assertEqual(BOT._wide_betting_evidence(game_state, "opponent"), expected)
+
+    def test_wide_history_changes_first_river_bet_but_preserves_reraise_defense(self):
+        base = RiverDefenseTests().river(owed=3600)
+        wide = dict(base, match_action_log=self.history())
+        self.assertEqual(BOT.decide(base), {"action": "fold"})
+        with patch.object(BOT, "_wide_betting_evidence", return_value=0.0):
+            self.assertEqual(BOT.decide(wide), {"action": "fold"})
+        self.assertEqual(BOT.decide(wide), {"action": "call"})
+        reraised = dict(wide, action_log=[
+            {"bot_id": bot, "street": "river", "action": "raise"}
+            for bot in ("opponent", "me", "opponent")
+        ])
+        with patch.object(BOT, "_wide_betting_evidence", side_effect=AssertionError):
+            self.assertEqual(BOT.decide(reraised), {"action": "fold"})
+
+    def test_adaptive_value_raise_requires_moderate_spr_and_wide_history(self):
+        game_state = StackCommitmentTests().facing(
+            your_cards=["Ah", "Kh"], your_stack=3200, your_bet_this_street=0,
+            amount_owed=400, current_bet=400, min_raise_to=800, pot=1200,
+            players=[{"bot_id": "me", "stack": 3200}, {"bot_id": "opponent", "stack": 3200}],
+            action_log=[{"bot_id": "opponent", "street": "flop", "action": "raise"}],
+        )
+        with patch.object(BOT, "_commitment_equity", return_value=(0.85, 0.65)):
+            self.assertEqual(BOT.decide(game_state), {"action": "call"})
+            wide = dict(game_state, match_action_log=self.history())
+            self.assertEqual(BOT.decide(wide), {"action": "raise", "amount": 800})
+            reraised = dict(wide, action_log=[
+                {"bot_id": bot, "street": "flop", "action": "raise"}
+                for bot in ("me", "opponent")
+            ])
+            self.assertEqual(BOT.decide(reraised), {"action": "call"})
+            self.assertEqual(BOT.decide(dict(wide, min_raise_to=1400)), {"action": "call"})
+
+
 class EquityTests(unittest.TestCase):
     def test_strong_and_weak_equity(self):
         strong = BOT.estimate_equity(["As", "Ad"], ["Ah", "7c", "2d"], 320, 11)
