@@ -21,11 +21,11 @@ A guided tour of UO-Monte's engineering work. The root [README](../README.md) is
 
 ## Historical project records
 
-The files below are intentionally preserved as **development history**, not authoritative descriptions of the current released implementation.
+The files below are intentionally preserved as **development history**, not authoritative descriptions of the current released implementation. The active root [HANDOFF](../HANDOFF.md) is now a concise final-state summary.
 
 | Archive | What it records |
 | :-- | :-- |
-| [Original starter-kit guide](official-starter-kit.md) | Official engine, sandbox, tournament and submission instructions |
+| [Internal agent handoff archive](archive/development-handoff-2026-11-21.md) | Verbatim record of multi-agent tasks and decisions, preserved for traceability |\n| [Original starter-kit guide](official-starter-kit.md) | Official engine, sandbox, tournament and submission instructions |
 | [V2 equity design brief](v2-monte-carlo.md) | Early Monte Carlo requirements and testing plan |
 | [Build milestones](build-milestones.md) | Initial roadmap |
 | [Opponent threat model](opponent-threat-model.md) | Adversarial assumptions and potential strategy risks |
