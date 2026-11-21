@@ -160,10 +160,56 @@ class RiverDefenseTests(unittest.TestCase):
             action = BOT.decide(self.river(owed=800, pot=1200, your_stack=200))
         self.assertEqual(action, {"action": "call"})
 
-    def test_river_checked_to_hero_keeps_v2_value_bet(self):
-        with patch.object(BOT, "estimate_equity", return_value=0.90):
-            action = BOT.decide(self.river(owed=0, can_check=True))
-        self.assertEqual(action, {"action": "raise", "amount": 660})
+class RiverValueTests(unittest.TestCase):
+    def river(self, **overrides):
+        values = {
+            "street": "river", "hand_num": 50, "amount_owed": 0, "pot": 1100,
+            "current_bet": 0, "can_check": True, "min_raise_to": 100,
+            "your_stack": 4000, "your_cards": ["Jc", "As"],
+            "community_cards": ["Js", "9d", "4h", "2s", "7c"],
+        }
+        values.update(overrides)
+        return state(**values)
+
+    def test_thin_value_prefers_small_bet_when_weaker_calls_are_sparse(self):
+        with patch.object(BOT, "_river_bet_responses", return_value=(0.30, 0.01)):
+            self.assertEqual(BOT.decide(self.river()), {"action": "raise", "amount": 352})
+
+    def test_check_raise_risk_can_make_same_hand_check_back(self):
+        with patch.object(BOT, "_river_bet_responses", return_value=(0.60, 0.30)):
+            self.assertEqual(BOT.decide(self.river()), {"action": "check"})
+
+    def test_nut_flush_bets_large_even_on_a_coordinated_board(self):
+        game = self.river(your_cards=["As", "Js"],
+                          community_cards=["3s", "Qd", "Ks", "Ts", "7s"])
+        self.assertEqual(BOT.decide(game), {"action": "raise", "amount": 770})
+        self.assertEqual(BOT.decide(dict(game, your_stack=70)), {"action": "all_in"})
+
+    def test_coordinated_board_and_medium_showdown_strength_checks(self):
+        self.assertEqual(BOT.decide(self.river(your_cards=["Qs", "Qc"],
+                                              community_cards=["3c", "Ad", "9h", "8c", "Tc"])),
+                         {"action": "check"})
+
+    def test_response_history_counts_opportunities_once_per_hand_and_street(self):
+        def event(hand, bot, action):
+            return {"hand_num": hand, "street": "river", "bot_id": bot, "action": action}
+
+        observed = [event(1, "me", "raise"), event(1, "opponent", "call")]
+        irrelevant = [event(2, "opponent", "raise"), event(3, "me", "all_in"),
+                      event(3, "opponent", "call")]
+        one_call = BOT._river_bet_responses(self.river(match_action_log=observed), "opponent")
+        self.assertEqual(BOT._river_bet_responses(
+            self.river(match_action_log=observed * 5 + irrelevant), "opponent"), one_call)
+        calls, raises = BOT._river_bet_responses(self.river(), "opponent")
+        self.assertGreater(one_call[0], calls)
+        self.assertLess(one_call[1], raises)
+
+    def test_facing_a_river_bet_bypasses_value_policy(self):
+        with patch.object(BOT, "_river_value_bet", side_effect=AssertionError):
+            with patch.object(BOT, "_river_defense", return_value={"action": "call"}) as defense:
+                game = self.river(amount_owed=100, can_check=False)
+                self.assertEqual(BOT.decide(game), {"action": "call"})
+                defense.assert_called_once_with(game)
 
 
 class StackCommitmentTests(unittest.TestCase):

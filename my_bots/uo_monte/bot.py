@@ -1,4 +1,4 @@
-"""UO-Monte 3.3: stack-aware play and adaptation to sustained aggression.
+"""UO-Monte 3.4: stack-aware play and selective river value betting.
 
 The ranges are coarse heuristics, not a solved/GTO chart.  They trade mixed
 strategy precision for fast, reproducible decisions and legal actions.
@@ -363,6 +363,108 @@ def _river_defense(state):
     return _respond("call", state)
 
 
+def _river_bet_responses(state, opponent):
+    """Estimate calls and raises per observed opportunity to respond to our bet."""
+    counts = {"flop": [0, 0, 0], "turn": [0, 0, 0], "river": [0, 0, 0]}
+    hero = state.get("your_bot_id")
+    pending = None
+    seen = set()
+    for event in state.get("match_action_log", []):
+        hand, street = event.get("hand_num"), event.get("street")
+        if hand is None or hand == state.get("hand_num") or street not in counts:
+            continue
+        key = hand, street
+        actor, action = event.get("bot_id"), event.get("action")
+        if actor == hero:
+            pending = key if action == "raise" else None
+        elif actor == opponent and key == pending and action in ("call", "fold", "raise", "all_in"):
+            if key not in seen:
+                seen.add(key)
+                counts[street][0] += 1
+                counts[street][1] += action == "call"
+                counts[street][2] += action in ("raise", "all_in")
+            pending = None
+    early = [a + b for a, b in zip(counts["flop"], counts["turn"])]
+    call_prior = (3.5 + early[1]) / (8 + early[0])
+    raise_prior = (0.8 + early[2]) / (8 + early[0])
+    chances, calls, raises = counts["river"]
+    return (6 * call_prior + calls) / (6 + chances), (6 * raise_prior + raises) / (6 + chances)
+
+
+def _river_value_bet(state):
+    """Compare two sizes by the chips won from weaker calls and risk of a raise."""
+    hole = _card_strings(state.get("your_cards", []))
+    board = _card_strings(state.get("community_cards", []))
+    if len(hole) != 2 or len(board) != 5 or len(set(hole + board)) != 7:
+        return {"action": "check"}
+    opponent = _opponent_id(state)
+    stack = state["your_stack"]
+    opponent_stack = next((p.get("stack", stack) for p in state.get("players", [])
+                           if p.get("bot_id") == opponent), stack)
+    effective = min(stack, opponent_stack)
+    if effective <= 0 or state["pot"] <= 0:
+        return {"action": "check"}
+
+    community = [eval7.Card(card) for card in board]
+    hero_score = eval7.evaluate(community + [eval7.Card(card) for card in hole])
+    deck = [eval7.Card(card) for card in _remaining_cards(hole + board)]
+    ranks = sorted(eval7.evaluate(community + [a, b]) for a, b in combinations(deck, 2))
+    count = len(ranks)
+    worse = bisect_left(ranks, hero_score)
+    ties = bisect_right(ranks, hero_score) - worse
+    strength = (worse + 0.5 * ties) / count
+    if strength < 0.68:
+        return {"action": "check"}
+
+    call_rate, raise_rate = _river_bet_responses(state, opponent)
+    aggression = _river_aggression(state, opponent)
+    in_position = state.get("seat_to_act") == state.get("button_seat")
+    pot = state["pot"]
+    # Coordinated boards give more opponents the kind of strong holdings that
+    # call or raise. Exact ranks account for blockers and board-only ties.
+    board_ranks = {card[0] for card in board}
+    coordinated = (len(board_ranks) < 5
+                   or any(sum(card[1] == suit for card in board) >= 3 for suit in SUITS)
+                   or any(len(board_ranks.intersection(("A" + RANKS)[i:i + 5])) >= 4
+                          for i in range(10)))
+    best = pot * (0.008 + 0.012 * (not in_position) + 0.007 * coordinated)
+    best_size = None
+    for fraction in (0.32, 0.70):
+        size = min(effective, max(state["min_raise_to"], round(fraction * pot)))
+        if size < state["min_raise_to"] and size < stack:
+            continue
+        size_ratio = size / pot
+        # Smaller bets keep weaker callers in. Larger bets need a wider
+        # history of calls or a stronger hand to justify their exposure.
+        cutoff = min(0.96, max(0.02, 1.02 - call_rate + 0.24 * (size_ratio - 0.5)))
+        can_face_raise = size < effective
+        broad_raise = min(0.22, raise_rate * (0.16 + 0.72 * aggression))
+        value_raise = min(0.70, 3.0 * raise_rate)
+        points = 0.0
+        start = 0
+        while start < count:
+            score = ranks[start]
+            end = bisect_right(ranks, score, lo=start)
+            percentile = (start + end) / (2 * count)
+            call_probability = min(0.98, max(0.02, 0.5 + 2.4 * (percentile - cutoff)))
+            raise_probability = 0.0
+            if can_face_raise:
+                raise_probability = broad_raise + value_raise * max(0.0, (percentile - 0.78) / 0.22)
+            result = (hero_score > score) - (hero_score < score)
+            gain = (1 - raise_probability) * call_probability * result * size
+            # Give a raise no credit for extra value from near-nut hands.
+            # For marginal hands reserve the bet and some lost showdown value.
+            if result < 0 or strength < 0.94:
+                risk = size + pot * (1.0 if in_position else 0.55) * (result > 0)
+                gain -= raise_probability * risk
+            points += (end - start) * gain
+            start = end
+        expected = points / count
+        if expected > best:
+            best, best_size = expected, size
+    return {"action": "check"} if best_size is None else _respond(best_size, state)
+
+
 def _commitment_hand(hole, board, score):
     """Distinguish hole-card strength from strength supplied by the board."""
     category = eval7.handtype(score)
@@ -508,6 +610,8 @@ def _postflop(state):
     street = state.get("street")
     if street == "river" and owed:
         return _river_defense(state)
+    if street == "river" and state.get("can_check"):
+        return _river_value_bet(state)
     if street in ("flop", "turn") and owed and state.get("action_log"):
         return _stack_commitment(state, owed, pot)
     simulations = POSTFLOP_SIMULATIONS.get(street, POSTFLOP_SIMULATIONS["river"])
