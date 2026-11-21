@@ -137,13 +137,20 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Next release decision:** human must explicitly approve staged chronological commits/pushes for V3.3 and V3.4 to `feature/strategy`, and approval to place a known-good bot on public `main`. Do not overwrite the V3.4 uncommitted workspace or have Claude edit it. Prioritize a Docker-capable machine or alternative organizer-run sandbox verification, but don't delay deploying a tested fallback until the cutoff.
 
+### Human authorization — V3.3/V3.4 strategy checkpoints (November 21, 2026)
+**Approved by primary teammate in chat:** Codex may reconstruct **V3.3 then V3.4** sequentially from saved **V3.2 `cfab27c`**, confirm byte-for-byte match to saved local bot/test snapshots, rerun **32** and **37** unit tests respectively plus the official validator, and **commit and push only `feature/strategy`**. Scope Git staging to `my_bots/uo_monte/bot.py` and `tests/test_uo_monte_bot.py`. Do not commit the untracked benchmark directory, modify `main`, or overwrite teammate branches/coordination files. Stop if reconstruction, tests, or branch safety checks fail; report rather than force-push.
+
+**Important:** This is approval for the two strategy-branch checkpoint commits only, **not** approval to merge or push a tournament release to `main`. Remote `feature/strategy` still points to `cfab27c` as of this entry. After the pushes complete, replace this status with the exact new commit hashes.
+
+**Claude visibility:** Once pushed, Claude may fetch and inspect `origin/feature/strategy` read-only. Claude must not merge or replace its working branch; TASK-CLAUDE-002 remains separate.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
 - [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
 - [ ] TASK-CLAUDE-002 paired-seat benchmark harness assigned; local implementation/testing authorized; Git writes require Alwaleed's approval.
-- [x] TASK-CODEX-002 V3.4 local work and follow-up readiness complete: 37 tests, validator, 72 local freezeouts, 24 fresh pairings. **Uncommitted; Docker sandbox untested (Docker unavailable).** Requires human release/checkpoint approval. Claude TASK-CLAUDE-002 continues independently.
+- [x] TASK-CODEX-002 local V3.4 readiness completed; **human approved chronological V3.3/V3.4 checkpoint commits and pushes on `feature/strategy` only; execution pending**. Docker sandbox still untested. No `main` release approval. Claude TASK-CLAUDE-002 continues independently.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
