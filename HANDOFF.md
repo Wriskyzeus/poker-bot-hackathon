@@ -207,6 +207,23 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Release reminder:** This remains local experimentation. Public `main` still contains the starter template; the human team must place a tested, validated bot on `main` in a controlled release prior to **6:30 PM ET** and verify the actual competition submission procedure. Restricted Docker tests remain unavailable locally.
 
+### Coordinator review — TASK-CODEX-004 / V3.6 (November 21, 2026)
+**Completed locally, awaiting human review:** V3.6 passed **43 unit tests** and all four official validator scenarios. Local WSL test report: **968 matches** with zero errors/timeouts/restarts. Compared with committed V3.4 using seeds 201–220 and holdout 221–240, V3.6 achieved **318/400 vs 316/400 raw wins**, and **123W/72D/5L vs 121W/74D/5L duplicate pairs**. Stress tests at 3.5/7.5/12BB improved **56/84 → 61/84** wins. Caveats: Aggressive holdout **29/40 → 26/40**, gross all-showdown chip losses increased, and official Docker sandbox remains untested. Full breakdown in `docs/testing.md`.
+
+**Version status:** Committed `feature/strategy` remains **V3.4 `a5ea561`**. V3.6 is uncommitted in an *isolated worktree*, and V3.5 was preserved separately as an experiment. Do not merge/push V3.6 without new human authorization. Claude TASK-CLAUDE-003 is independently developing harness corrections and toy opponents.
+
+### TASK-CODEX-005 — V3.6.1 regression diagnosis and evidence-based refinement
+**Assigned:** Primary teammate / Codex CLI. **Status:** local analysis/experiments allowed, no commit, push, merge or changes to `main`. **Workstream:** strategy-only; Claude retains all benchmarking harness/independent opponent ownership.
+
+1. Preserve V3.6 source/tests exactly as an isolated, reproducible snapshot + patch; preserve V3.4 `a5ea561` and V3.5 experimental patch. Verify the isolated `v36-worktree` and its Git status before working; no destructive cleaning/reset.
+2. First compare V3.4 and V3.6 preflop decisions for **Aggressive holdout seeds 221–240**, showing which changed decisions correspond to lost matches and whether paired-seat results changed. Review equity/stack-price assumptions, effective stack, antes, repeated reraises, and short-stack conditions. Don't assume the exact 3 fewer match wins are a strategic regression without causal evidence.
+3. Produce an explainable preflop-only V3.6.1 change **only if the diagnosis indicates a generalizable error**; do not hardcode opponent IDs, seeds, exact hand histories or test results. Preserve all V3.4 postflop logic and bot safety constraints.
+4. Run tests, validator, local latency and stress suite with seeds 201–240 as regression tests. Compare **V3.4, V3.6 and V3.6.1** with seed swaps on fresh seeds **241–260 for development** and **261–280 for holdout**, with five baseline opponents and explicit Floorfix fixed blinds. Reserve **1001–1200** for final sealed testing. Track paired W/D/L, raw wins, short-stack EV proxies, stack-off severity and changes against Aggressive. Avoid interpreting small gains as proof of stronger strategy.
+5. **Do not commit/push V3.6 or V3.6.1**. Return a diff, action-level root cause analysis, tests/benchmarks and a recommendation whether to retain V3.4, V3.6, or V3.6.1. Claude may later add harder independent opponents, but its branch is not to be edited or pulled into this worktree while active.
+6. Do not edit `pokercore/`, public `main`, `HANDOFF.md`, partner's branch or the tournament submission. Ask the human for approval to publish any strategy version.
+
+**Deadline gate:** Well before **6:30 PM ET**, the human teammates must put the best vetted bot into public `main` and verify the competition's required submission; do not spend the entire window tuning one toy opponent.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -217,7 +234,8 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 - [ ] TASK-CLAUDE-003 independent harness hardening and overfolder/trapper toy opponents in progress locally; no Git writes authorized.
 - [x] TASK-CODEX-002 local V3.4 readiness completed; **human approved chronological V3.3/V3.4 checkpoint commits and pushes on `feature/strategy` only; execution pending**. Docker sandbox still untested. No `main` release approval. Claude TASK-CLAUDE-002 continues independently.
 - [x] TASK-CODEX-003 V3.5 local tests complete (43/43 + official validator); **310/400 vs V3.4 310/400 on standard opponents; identical decisions**. 18 extra bets / 15 immediate folds in overfolder diagnostic, but no match-win gain. Preserve local patch; no publication approval.
-- [ ] TASK-CODEX-004 local V3.6 preflop/short-stack investigation and tests assigned; no Git publication approval.
+- [x] TASK-CODEX-004 V3.6 local comparison complete: 43 tests + validator, 318/400 vs V3.4 316/400, 61/84 vs 56/84 ante/short-stack stress, Aggressive holdout -3. **Uncommitted in isolated worktree.**
+- [ ] TASK-CODEX-005 V3.6.1 regression analysis and conditional refinement assigned locally, no Git publication approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
@@ -237,7 +255,7 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 ## Development roadmap (provisional, updated November 21, 2026)
 
 - **V3.5:** completed exploratory semi-bluff experiment; no observed match-win gain on standard field, preserve as local patch.
-- **V3.6:** moved up heads-up preflop / 3-bet / short-stack analysis and scoped optimization to avoid waiting for Claude's independent opponent work.
+- **V3.6:** preflop/3-bet/effective-stack prototype completed locally. Promising short-stack stress gains but uncertain overall value due to Aggressive holdout regression; use TASK-CODEX-005 to investigate before acceptance.
 - **V3.7:** potential integration of vetted opponent-opportunity statistics from Claude's QA after its task-003 harness/opponents are reviewed. No duplicate modeling code or unconditional integration.
 - **V4:** diverse opponents, pair-level tournament scoring, Docker/sandbox if available, latency and safety validation, freeze and deploy strongest candidate to `main`.
 
