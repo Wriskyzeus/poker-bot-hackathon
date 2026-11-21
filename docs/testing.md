@@ -126,6 +126,27 @@ Reported **V2 decision p95 ~3.682 ms and maximum ~7.278 ms across 9,126 decision
 
 **Git status at last check:** Version 2 was pushed to `feature/strategy` in commit `ef760ca5bf14b367feac9accb3f4b3fbeb478181`. `main` holds documentation and the original tournament template; user is collecting organizer approval before importing external bots.
 
+## External Floorfix benchmark — November 21, 2026
+
+**Source:** Local Codex CLI report supplied by team. Competitor: publicly released MIT-licensed Tanuj Kakumani `bots/floorfix/bot.py` from https://github.com/txnujk09/fullhouse-poker-bot, upstream commit `4fe154318949aa60430682416f148733c6f0d564`. Source used **unchanged** in an isolated local checkout; no changes to UO-Monte, `pokercore/`, or `main` for this exercise.
+
+**Important format limitation:** The benchmark used **flat 50/100 blinds**, because Floorfix hard-codes a 100-chip big blind in multiple preflop decisions. Floorfix was created for **6-max** rather than this event's heads-up format. These are local adaptation results, **not the actual rising-blind tournament format**.
+
+- IEEE engine and Python 3.10.22, 10,000 starting chips each, 2-second per-decision deadline
+- 20 seeds with swapped seats: 40 matches, 4,078 hands, all ending by elimination
+- **UO-Monte V2: 23 wins, 17 losses (57.5%)**; seat 0: 10–10, seat 1: 13–7
+- **Floorfix: 17 wins, 23 losses**; validator passed and separate 92-hand smoke match completed
+- UO-Monte: 6,523 decisions, p95 **4.635 ms**, max **7.630 ms**; Floorfix 6,808 decisions, p95 **3.003 ms**, max **5.961 ms**
+- **Reported errors/timeouts: 0/0** for each bot
+- A 23–17 win split over 40 games is **not** conclusive evidence of superiority, especially given fixed blinds and the format adaptation
+
+**V3 diagnostic priorities from local hand histories:**
+1. **Range-aware river defense:** 43 of 46 terminal river calls cost chips, totaling 50,509 chips relative to folding those same decisions according to the local report; avoid using random-hand equity as though it were equity against a selected betting range
+2. **Don't stack off blindly with one pair:** seed 5, seat 1, hand 5 reportedly lost 9,830 chips by repeatedly reraising top pair into top set
+3. **Reassess board texture and opponent line:** seed 16, seat 1, hand 56 reportedly reraised pocket kings on a river paired with an ace against trips
+
+**Next checkpoint:** Develop independently implemented V3 opponent-aware calling and stack-commitment logic, keep V2 as rollback, test against Tight/Mixed/Aggressive/Caller and Floorfix where appropriate, and retest official rising-blind format separately. Freeze, validate and push tested submission to public `main` before the team-reported 6:30 PM ET deadline.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
