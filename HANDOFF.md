@@ -89,11 +89,25 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 
 **Concurrency:** Claude independently performs TASK-CLAUDE-001 as **read-only research/QA** on Alwaleed's branch, not edits to `bot.py`. The two tasks are intentionally separate. A new Claude coding assignment requires human approval after Claude's report.
 
+### TASK-CLAUDE-001 — Report review (coordinator, November 21, 2026)
+**Status: completed by Claude, reviewed by ChatGPT.** Source: human-provided four-page `TASK-CLAUDE-001-report.md.docx`, not yet published as a GitHub report file. Claude states this was a **read-only** review of committed V3.2 at `cfab27c` and main documentation at `f454b2b`; it **did not run poker matches, tests or benchmarks**, nor review local uncommitted V3.3/V3.4.
+
+**Useful findings:**
+1. **Benchmark precision/reproducibility:** V3.3's 318/400 vs V3.2's 316/400 is too small a change to support a confident ranking; unseen seeds are not unseen opponents. Local practice opponent code and `benchmarks/` results are not part of the committed repo. Improve paired-seed reporting and reproduce locally under true tournament conditions.
+2. **History estimation:** preflop `_opponent_history` conflates different decision opportunities (SB limp vs BB defend vs facing 3-bet). River aggression also combines qualitatively different contexts. Use opportunity-specific denominators, minimum observations, and shrinkage; keep current core interfaces until parity-tested.
+3. **Exploitation coverage:** current committed V3.2 code assumes zero fold equity when it can check; there is no explicit postflop bluff/steal policy against habitual folders. A future phase could study such opponents without blindly introducing aggression.
+
+**Independently checked against GitHub:** `main/my_bots/uo_monte/bot.py` is still the starter bot (65 lines), while committed V3.2 on `feature/strategy` is 496 lines. `pokercore/table.py` sets `MATCH_LOG_MAX_ENTRIES = 200`. The concerns about ambiguous preflop/river statistics and only betting for value follow from V3.2 code. Claude's approximate p-values presume independent match results; our paired-seed design requires a paired analysis for formal inference. Its statement that UO-Monte *cannot possibly* win the bluffer prize is stronger than the code alone establishes.
+
+**Proposed next Claude assignment (NOT YET AUTHORIZED):** independent, reproducible benchmark harness with pair-level scoring, unseen opponent types, seed/seat swaps, special stack/blind regimes and sandbox timing; outside `my_bots/uo_monte/`. Human approval required before writing code or Git commits/pushes on Alwaleed's branch.
+
+**Highest-priority release issue:** public `main` still contains the starter bot, so the team must deliberately deploy a tested release there **before the 6:30 PM ET cutoff**. Codex is presently running independent V3.4 development; do not interrupt or overwrite its uncommitted files.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
-- [ ] TASK-CLAUDE-001 report awaiting Alwaleed/Claude (runs concurrently with Codex V3.4 local development).
+- [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above. Claude's **next** task requires human authorization.
 - [ ] TASK-CODEX-002 V3.4 river value-betting local task assigned; V3.3 checkpoint Git write and all later writes still require human approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
