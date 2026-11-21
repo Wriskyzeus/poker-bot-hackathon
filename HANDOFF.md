@@ -365,6 +365,15 @@ See **`docs/opponent-threat-model.md`** for a prioritized, rules-checked catalog
 
 **Deliverables:** clear V3.4 vs V4 vs ablation (and V4.1 if justified) table, action-level reraise EV audit, tests, warnings and uncertainty, patch paths and `git status --short`; separately, verified *ready-but-not-pushed* V3.4 submission package/checklist. Human explicitly authorizes any later strategy publication.
 
+### TASK-CODEX-008 — coordinator completion review (November 21, 2026)
+**Status: COMPLETED LOCALLY, NO VERSION PROMOTION OR RELEASE.** Codex reports all **1,200** fresh matches (V3.4, V4, V4-no-extra-raises) completed without errors/timeouts/restarts. Original 19 V4 call→raise overrides: 14 calls, five reraises; V4 **called all five reraises**, because it lumped all nonfold outcomes into a single call branch in its raise-EV estimate. **18/19** added raises were against Floorfix, with only 0–3 comparable observations per spot; live reraise-frequency estimates are not trustworthy. An offline corrected raise-EV tree was built and passed seven tests, but Codex declined to implement speculative V4.1, instead tested a V4-no-extra-raises ablation retaining the tracker and fold/call logic.
+
+**Fresh paired results order V3.4 / full V4 / ablation:** dev seeds 681–700 raw wins **153/200 / 154/200 / 154/200**, pair **56/41/3 · 56/42/2 · 56/42/2**. Holdout 701–720 raw wins **151/200 / 153/200 / 153/200**, pair **56/39/5 · 57/39/4 · 57/39/4**. Combined **304/400 vs 307/400 vs 307/400**, paired **112W/80D/8L vs 113W/81D/6L** (full V4 and ablation equal on outcomes). Gross showdown losses **2,937,312 / 2,910,626 / 2,907,396**. 37/45/45 unit tests, all official validators passed; local decision p95 near 3ms, Docker half-CPU unavailable. Extremely small net gain that conflicts with earlier V4 weak fresh benchmark, so **V3.4 `a5ea561` stays release candidate**. The research-only no-extra-raises variant remains uncommitted and isolated; all V3.5–V4 artifacts protected.
+
+**Release readiness:** Codex prepared an **uncommitted, verified patch** for public main with exactly `my_bots/uo_monte/bot.py` and `tests/test_uo_monte_bot.py` from committed V3.4 `a5ea561`. Local release dry-run: 37 tests passed, official validator passed, 44-hand Caller smoke won without errors. V3.4 bot Git blob SHA **`27acb669ee3ac35172a88293c198182b56db0f78`**. Coordinator independently verified current `main:my_bots/uo_monte/bot.py` remains **starter template** at blob SHA `05ddd291004fac5800d9e0bcba240629c18cd5be`. Public repository and main branch verified, **submission form unverified**; Docker unavailable. **Human authorization to publish V3.4 on `main` has not yet been received.** This is a time-sensitive release blocker: promote a tested candidate as soon as explicitly authorized; continue only bounded optional new opponent testing afterward. Deadline **6:30 PM ET**, freeze gate 5:30 PM ET. Do not claim tournament submission from docs-only GitHub commits.
+
+**Follow-up task assignment:** There is **no active TASK-CODEX-009 yet**. Claude TASK-CLAUDE-006 is independently building bluff-capable positional-pressure opponents. Priority now is **human-approved safe baseline release to public `main`**, then use Claude's independent results to choose any genuinely higher-impact further experiments. Don't ask Codex to start another speculative V4.x change in advance of those findings. At release, verify GitHub `main` blob and form separately.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -382,7 +391,8 @@ See **`docs/opponent-threat-model.md`** for a prioritized, rules-checked catalog
 - [x] TASK-CODEX-005 V3.6.1 completed locally: fresh holdout 154/200 vs V3.4 155/200; short-stack stress 45/64 vs V3.4 48/64; **not adopted**. V3.4 remains release candidate.
 - [x] TASK-CODEX-006 V3.7 tested locally: 315/400 vs V3.4 314/400, only 141 smaller-bet changes/19,892 opportunities, no gain vs two Claude bots; **not adopted/pushed**.
 - [x] TASK-CODEX-007 V4 completed locally: tracker replayed 355/355 opportunities, 45 tests + official validator; **319/400 vs V3.4 321/400**, holdout tied and gross losses increased; **not adopted**.
-- [ ] TASK-CODEX-008 V4 raise-EV ablation, counter-reraise risk calibration, and **V3.4 release dry-run** assigned, local-only and no Git publication approval.
+- [x] TASK-CODEX-008 complete locally: 1,200 matches, full V4 vs no-extra-raises identical match outcomes **307/400** vs V3.4 **304/400**, flawed reraise EV identified, local release dry-run passed; **no strategy publication**.
+- [ ] **URGENT:** Human approval and deployment of exact V3.4 candidate to public `main` still pending; public main bot is starter template, form completion unverified.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
