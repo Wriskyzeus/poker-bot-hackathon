@@ -318,6 +318,36 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 
 **Division of labor:** Codex continues **V3.5 selective semi-bluffs and fold equity** on `feature/strategy`; Claude's next assignment is separate benchmark quality and independent practice opponents. The two AIs coordinate by reading `main/HANDOFF.md` and exchanging reports through the humans. Neither agent may merge to `main` or publish code without human authorization.
 
+## Version 3.5 selective semi-bluffs and fold equity — November 21, 2026
+
+**Source:** Team-shared Codex CLI report screenshot, benchmark completed approximately 13:40 ET; numerical results have not been independently rerun here. **V3.5 remains local and uncommitted**, with both local and remote `feature/strategy` still pointing to **V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`**. Do not mistake the different seed-set totals for a historical regression in V3.4.
+
+**Change:** On flop/turn when checking is free, V3.5 estimates opponent fold-to-bet frequency from observed replies to UO-Monte's own opening bets, distinguishes bet sizes, shrinks sparse observations to a conservative prior and requires sufficient samples. It compares check with approximately one-third and three-fifths pot bets, taking account of equity when called, position and effective stacks. Prior value betting, preflop, facing-bet flop/turn defense and river decisions are reported preserved.
+
+**Validation:** Codex reports **43 unit tests** and all **four official validator scenarios passed** in Python 3.10.22. **800 standard matches** (V3.4 and V3.5 each played 400) plus **40 diagnostic matches** (20 per version) completed with zero errors/timeouts/restarts. Final sealed seeds **1001–1200 remained unused**.
+
+| Opponent | Blinds | Development seeds 61–80 (both versions, wins / 40; pair W/D/L) | Holdout 81–100 (both versions, wins / 40; pair W/D/L) |
+|---|---|---|---|
+| Caller | Rising | 40; 20/0/0 | 40; 20/0/0 |
+| Aggressive | Rising | 34; 14/6/0 | 31; 11/9/0 |
+| Tight | Rising | 27; 9/9/2 | 31; 11/9/0 |
+| Mixed | Rising | 23; 6/11/3 | 21; 4/13/3 |
+| Floorfix | Flat 50/100 | 33; 13/7/0 | 30; 11/8/1 |
+| **Total per 200** | Mixed formats | **157; 62/33/5** | **153; 57/39/4** |
+| **Combined per 400** | Mixed formats | **310 wins, 119/72/9 pairs for each version** | |
+
+**Critical result:** V3.5's new policy **did not trigger in any of these five standard-opponent benchmarks**. V3.4 and V3.5 produced **identical action sequences and exactly the same 310/400 wins** (77.5% team-defined pair score across 200 pairs). No evidence of strength improvement on this opponent pool. Slight added p95 latency from the new computations without benefit.
+
+**Timing p95 / max (ms, local):**
+- Development: V3.4 **3.075 / 23.903** → V3.5 **3.121 / 35.997**.
+- Holdout: V3.4 **3.108 / 27.200** → V3.5 **3.152 / 24.699**.
+- These are host timings; the restricted Docker sandbox is a separate release gate.
+
+**Deliberately overfolding practice opponent (diagnostic only):** Across 20 matches per version, both bots won **18/20 matches**, representing **8 pair wins, 2 draws and zero pair losses**. Compared with V3.4, V3.5 made **18 additional flop/turn bets**, induced **15 immediate folds**, and realized **+7,333 net hand chips across those 18 hands**; however V3.5 also suffered **2,203 additional chips in all-in showdown losses**. These are observed path results and **not a matched counterfactual EV estimate**. Three immediate folds came from bets with estimated equity below 40%. The opponent was designed to overfold, so this does not establish broader tournament strength.
+
+**Coordinator decision:** **Keep V3.4 as leading committed release candidate**. Preserve V3.5 locally as a labeled experimental patch/snapshot and tests, but **do not promote to `feature/strategy` or `main`** without new evidence on a diverse, independently tested opponent field. The next Codex direction can focus on unaddressed *preflop/short-stack* leaks, while partner Claude completes its separate benchmark-hardening and diverse practice-opponent task (TASK-CLAUDE-003). Preserve task isolation and seek human approval before any Git writes to strategy code.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
