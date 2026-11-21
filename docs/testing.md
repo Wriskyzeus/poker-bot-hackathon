@@ -48,6 +48,31 @@ python3 play.py my_bots/uo_monte bots/caller --seed 7
 - **Evidence limitation:** one seed is not a meaningful performance estimate, and the upgraded strategy code is **only in the local Codex working tree**, not GitHub yet. The original starter bot remains on `main`.
 - **Next test:** multiple seeds with seat orders swapped. Check win rate, invalid actions, errors, timeouts and average decision time. Review the diff before committing.
 
+## Five-seed paired benchmark — November 21, 2026
+
+**Uncommitted local Version 1 heads-up preflop strategy** versus the official `bots/caller`. User ran both bot orderings for seeds 1–5:
+
+```bash
+for seed in 1 2 3 4 5; do
+  python3 play.py my_bots/uo_monte bots/caller --seed "$seed" | tail -n 4
+  python3 play.py bots/caller my_bots/uo_monte --seed "$seed" | tail -n 4
+done
+```
+
+| Seed | UO-Monte first seat | UO-Monte second seat | Qualification pairing |
+|---|---|---|---|
+| 1 | Loss (122 hands) | Loss (168 hands) | Lost |
+| 2 | Loss (113 hands) | Loss (177 hands) | Lost |
+| 3 | Loss (144 hands) | Win (141 hands) | Draw |
+| 4 | Win (153 hands) | Win (123 hands) | Won |
+| 5 | Win (132 hands) | Loss (140 hands) | Draw |
+
+- **Overall:** 4 wins, 6 losses (40% observed freezeout match win rate).
+- **Duplicate-pair score:** 1 pairing won, 2 drawn, 2 lost.
+- **Execution:** no crash/timeout reports visible in the displayed match summaries; the organizer's four validator scenarios also passed.
+- **Interpretation:** promising that the bot can win, but this is *not* evidence of competitiveness or an improvement over the original template, which has not been evaluated on the same ten matches yet.
+- **Next gate:** preserve Version 1 in `feature/strategy`, compare the unchanged `bots/template` on the same seeds/seat orders, review the Version 1 code, then tune weaknesses before considering Monte Carlo additions. Do **not** merge unbenchmarked upgrades into `main`.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
