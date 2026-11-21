@@ -176,6 +176,34 @@ Timing reported: V3.1 overall decision p95 **4.362 ms**, max **9.243 ms**. For r
 
 **Evaluation caution:** 148/200 versus 142/200 is a modest observed gain across heterogeneous opponents and not a robust statistical claim. These are homemade opponents plus a 6-max-derived external opponent under flat blinds, not an actual tournament field. Do not merge onto public `main` before release freeze, official validator and sandbox tests.
 
+## Version 3.2 effective-stack and reraise defense — November 21, 2026
+
+**Source:** User-shared Codex CLI benchmark report, local WSL Python 3.10.22. **V3.1 was committed on `feature/strategy` at `c12396ea372be6be86930e360c17d1e7998582e0`. V3.2 was subsequently committed and pushed to `feature/strategy` at `cfab27c26222423b46b7293c6416785c7115369e`.** `main` does not yet contain V3.
+
+V3.2 changed flop/turn response to bets using effective stacks, stack-to-pot ratio, hand class, public betting history and opponent-weighted equity estimates. It restrains repeated one-pair reraises against value-heavy ranges while preserving raises with strong hands or justified short-stack situations. Preflop and V3.1 river-defense behavior were left unchanged.
+
+**Testing:** 29 unit tests and the official validator passed. Local paired seeds 1–20 in both seats for V3.1 and V3.2 across five opponents (**400 matches total**). No errors/timeouts/restarts were reported.
+
+| Opponent | Blinds | V3.1 wins / 40 | V3.2 wins / 40 | Flop/turn all-in showdown losses, V3.1 → V3.2 (chips) |
+|---|---|---:|---:|---:|
+| Caller | Rising | 40 | 40 | 759 → 759 |
+| Aggressive | Rising | 34 | 31 | 17,906 → 29,282 |
+| Tight | Rising | 26 | 33 | 141,891 → 44,878 |
+| Mixed | Rising | 22 | 24 | 132,305 → 69,350 |
+| External Floorfix | Flat 50/100 | 26 | 34 | 153,481 → 16,819 |
+| **Total** | Mixed | **148 / 200** | **162 / 200** | **446,342 → 161,088 (~64% reduction)** |
+
+The 'losses' column sums losses in all-in showdowns where the final commitment occurred on the flop or turn; it is **not** a total EV or win-rate measure. Reported overall local decision p95/max: V3.1 **3.656 / 10.088 ms** vs V3.2 **3.647 / 7.465 ms**. Facing flop or turn bets, p95/max improved from **2.896 / 10.088** to **1.867 / 2.748 ms**.
+
+**Hand-history examples:**
+- Floorfix seed 5 / seat 1 / hand 5: V3.2 called a flop check-raise with top pair instead of repeatedly reraising into top set, reducing the lost chips from **9,830 to 5,664**. Both versions ultimately lost that match.
+- Aggressive seed 4 / seat 0 / hand 1: V3.2 called the flop with pocket tens rather than raising; later river price induced a fold. V3.1 won **10,000** chips on the hand while V3.2 lost **5,801**, illustrating the cost of overly passive lines against bluffs.
+
+**Recommended release policy:** Keep V3.2 as the *candidate development baseline*, now preserved on `feature/strategy` after verification (29 unit tests + official validator passed); retain the earlier V3.1 (`c12396e`) and V2 (`ef760ca`) as rollback points. Do not promote to tournament `main` based only on one opponent pool; test the true half-core Docker sandbox and fix regressions against aggressive players without giving back strong-range discipline. Freeze and push the final tested bot well before 6:30 PM ET.
+
+
+**Verified GitHub checkpoint:** `cfab27c26222423b46b7293c6416785c7115369e`, message "Implement UO-Monte V3.2 stack commitment intelligence"; exactly `my_bots/uo_monte/bot.py` and `tests/test_uo_monte_bot.py` changed. Codex reported tracked working tree clean and local `benchmarks/` directory untracked. No `main` or teammate-branch modification.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
