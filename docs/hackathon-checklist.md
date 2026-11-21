@@ -1,7 +1,7 @@
 # Hackathon day checklist
 
-- [ ] Submit the team name as `uo_monte` (display name UO-Monte), and confirm the coding/submission cutoff.
-- [ ] Confirm whether AI-assisted **development** is allowed.
+- [ ] Submit the team name as `uo_monte` (display name UO-Monte) on the form. **Organizer-reported submission cutoff is November 21, 2026, 6:30 PM ET.**
+- [x] Organizer verbally approved AI-assisted development, offline open-source benchmark opponents, licensed strategy adaptation, and external model/data tables subject to original runtime rules (reported by team on November 21).
 - [ ] Install WSL Ubuntu / build-essential / git / make if on Windows; prepare Python 3.10 using uv.
 - [ ] Run `make install`, then `python3 play.py my_bots/uo_monte bots/caller --seed 7`.
 - [ ] Run `make validate BOT=my_bots/uo_monte`.
@@ -21,5 +21,5 @@
 - [ ] Entry at `my_bots/uo_monte/bot.py`, plus only allowed optional data.
 - [ ] No dependence on `src/` files or altered `pokercore/`.
 - [ ] Run validator and one full match; Docker sandbox if possible.
-- [ ] Final code merged to **public main** and pushed before cutoff.
+- [ ] Final code merged to **public main** and pushed safely before **6:30 PM ET on November 21, 2026**.
 - [ ] Folder name equals submission form; record final commit SHA.
