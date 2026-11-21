@@ -11,7 +11,7 @@
 - Claude and ChatGPT do not automatically converse: each reads latest `main` from GitHub; Claude reports findings to Alwaleed; the human forwards those findings or posts a human-approved update for coordinator review.
 
 ## Current branches and safe checkpoints
-- `main`: public submission branch. **The final validated strategy has not yet been promoted to main.** Shared documentation updates here are NOT a final submission.
+- `main`: **V3.4 baseline RELEASED and GitHub-verified** by explicit primary human teammate approval. Public `my_bots/uo_monte/bot.py` is byte-identical to the `a5ea561` candidate (blob SHA `27acb669ee3ac35172a88293c198182b56db0f78`), with 37-test suite added at commit `d2a074659f015d2349cd229777ab979699c99176`. Repo is public. **Submission form completion and restricted Docker sandbox remain unverified**. Later changes require new explicit human approval.
 - `feature/strategy`: last verified committed bot **V3.4** at `a5ea561ff5b70d5a17533579bfc6557b2979622b` (`my_bots/uo_monte/bot.py`, `tests/test_uo_monte_bot.py`). Recoverable earlier baselines: **V3.3** `8fe2590`, **V3.2** `cfab27c`, **V3.1** `c12396e`, **V2** `ef760ca`.
 - `alwaleed/exploit-and-testing`: partner's independent branch; its shared notes were incorporated into `main` for coordination. Do not merge it wholesale or overwrite teammate work.
 - **V3.3 adaptive aggression:** tested with 32 unit tests, official validator passed, committed/pushed as `8fe2590` prior to V3.4. 
@@ -374,6 +374,11 @@ See **`docs/opponent-threat-model.md`** for a prioritized, rules-checked catalog
 
 **Follow-up task assignment:** There is **no active TASK-CODEX-009 yet**. Claude TASK-CLAUDE-006 is independently building bluff-capable positional-pressure opponents. Priority now is **human-approved safe baseline release to public `main`**, then use Claude's independent results to choose any genuinely higher-impact further experiments. Don't ask Codex to start another speculative V4.x change in advance of those findings. At release, verify GitHub `main` blob and form separately.
 
+### Verified V3.4 baseline publication — November 21, 2026
+**PUBLIC MAIN NOW CONTAINS THE ACTUAL V3.4 BOT, NOT THE TEMPLATE.** The primary human teammate explicitly authorized pushing the validated V3.4 to `main`. GitHub publications: bot file commit `61e4fcd3b98f381ebaff8811e6557fba858d8422`, test file commit `d2a074659f015d2349cd229777ab979699c99176`. Verified public/default `main` and exact bot Git blob `27acb669ee3ac35172a88293c198182b56db0f78` and tests blob `a2c33fe0279f0ba63d803d1f6533f915086889c7`, both identical to protected strategy commit `a5ea561`. Local prior dry-run passed 37 unit tests, official validator and 44-hand Caller smoke. Restricted Docker sandbox unavailable. **Submission form confirmation not yet received**; team must ensure form submitted with exact folder/team identifier `uo_monte` and public repo URL. Full release entry in `docs/testing.md`.
+
+**Next technical development:** Claude TASK-CLAUDE-006 independently constructs bluff-capable and preflop-pressure opponents; await its held-out results to prioritize significant strategy defects. Codex TASK-CODEX-008 has completed and V4 variants are research-only; no automatic TASK-CODEX-009 has been started. Any later experimental upgrade must demonstrate performance against a diverse, independent opponent set and preserve publicly released V3.4 until a replacement is validated and separately authorized. Deadline **6:30 PM Eastern**, planned 5:30 PM freeze/readiness review. **Human controls release**.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -392,8 +397,10 @@ See **`docs/opponent-threat-model.md`** for a prioritized, rules-checked catalog
 - [x] TASK-CODEX-006 V3.7 tested locally: 315/400 vs V3.4 314/400, only 141 smaller-bet changes/19,892 opportunities, no gain vs two Claude bots; **not adopted/pushed**.
 - [x] TASK-CODEX-007 V4 completed locally: tracker replayed 355/355 opportunities, 45 tests + official validator; **319/400 vs V3.4 321/400**, holdout tied and gross losses increased; **not adopted**.
 - [x] TASK-CODEX-008 complete locally: 1,200 matches, full V4 vs no-extra-raises identical match outcomes **307/400** vs V3.4 **304/400**, flawed reraise EV identified, local release dry-run passed; **no strategy publication**.
-- [ ] **URGENT:** Human approval and deployment of exact V3.4 candidate to public `main` still pending; public main bot is starter template, form completion unverified.
-- [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
+- [x] **V3.4 deployed and blob-verified on public `main`** after human authorization; bot and tests identical to protected `a5ea561`.
+- [ ] **Submission form completion remains unverified**; human must submit the form and retain confirmation. Official Docker sandbox test also remains unavailable.
+- [x] Baseline V3.4 publication to public `main` authorized by primary human teammate and exact bot/test blobs verified.
+- [ ] Submission form confirmation and official sandbox test (if Docker becomes available). Any new final release still requires explicit human approval.
 
 ## Open questions and decisions
 1. **Legacy `_opponent_history` vs new tracker:** New tracker should provide independent features and a well-tested optional adapter. No immediate replacement. Ask Codex to integrate only after approval.
