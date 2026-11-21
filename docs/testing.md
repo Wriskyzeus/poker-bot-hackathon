@@ -389,6 +389,36 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 **Next phase:** Recommend Alwaleed approve pushing the reviewed TASK-003 files on `alwaleed/exploit-and-testing` (no merge into `main`), then have Claude run independent benchmark probes on the **committed V3.4** bot against both new opponents, report specific weaknesses and prepare actionable recommendations for Codex once its V3.6.1 task completes. Separate workstreams; no edits to `my_bots/uo_monte/bot.py` from Claude.
 
 
+## Version 3.6.1 deep-button three-bet defense — November 21, 2026
+
+**Report provenance:** Codex CLI screenshots supplied by human teammate; the coordinator has *not* independently rerun the 1,792 matches. **V3.6.1 remains uncommitted in the isolated strategy worktree.** Original V3.6 remains recoverable via verified snapshot/patch, and earlier V3.5 patch remains protected. Remote `feature/strategy` verified as V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`; no strategy commits/pushes in this task.
+
+**Investigation:** The original Aggressive V3.6-vs-V3.4 match flips diverged at a *deep-stack button facing same-sized three-bets*. V3.6 defended **K7 offsuit** on seed 224 just below its threshold; V3.4 did not. For seeds 227/236, V3.6 called **87 offsuit** and **K5 offsuit** respectively and lost **744 / 110 chips** in those hands versus V3.4 folds. Those individual hand differences illustrate the trade-off; they do **not** establish sole causality for tournament match outcomes.
+
+**Change:** V3.6.1 estimates opposing big blind's three-bet range from observed responses to UO-Monte button opens using a conservative sparse-data prior, discounts the equity of weak offsuit hands for postflop playability, and confines correction to deep-button defense versus three-bets. V3.6 short-stack decisions and V3.4 postflop code unchanged. Three-way raw-wins tables below are ordered **V3.4 / V3.6 / V3.6.1**. Every version tested in two seat assignments.
+
+| Opponent | Development seeds 241–260, each out of 40 | Fresh holdout 261–280, each out of 40 |
+|---|---:|---:|
+| Caller (rising blinds) | 40 / 40 / 40 | 40 / 40 / 40 |
+| Aggressive (rising) | 30 / 30 / 30 | **30 / 29 / 28** |
+| Tight (rising) | 31 / 30 / 32 | 29 / 28 / 29 |
+| Mixed (rising) | 26 / 28 / 27 | **31 / 29 / 28** |
+| Floorfix (flat 50/100) | 33 / 35 / 35 | 25 / 27 / 29 |
+| **Raw wins per 200** | **160 / 163 / 164** | **155 / 153 / 154** |
+| **Duplicate pair W/D/L per 100** | **63/34/3 · 65/33/2 · 66/32/2** | **59/37/4 · 57/39/4 · 59/36/5** |
+
+**Fresh combined 400 matches/version:** V3.4 **315 wins**; V3.6 **316**; V3.6.1 **318**. Aggregate duplicate pairs V3.4 **122W/71D/7L**; V3.6 **122W/72D/6L**; V3.6.1 **125W/68D/7L**. In the *fresh holdout*, V3.4 won more raw matches than V3.6 and V3.6.1. These small changes are statistically fragile; don't declare V3.6.1 superior using aggregate wins alone.
+
+**Previously tested regression seeds 201–240:** raw wins **316 / 318 / 323** out of 400; Aggressive specifically **59 / 57 / 59** out of 80. V3.6.1 recovered seeds 227 and 236 but seed 224 remained lost. Because these seeds informed diagnosis and refinement, they are **regression/development data**, not new holdout proof.
+
+**New-seed all-in chip metric (V3.4 / V3.6 / V3.6.1):** preflop all-in *showdown losses* **266,635 / 93,723 / 113,757** chips. Overall *gross showdown losses* **2,846,140 / 2,909,979 / 2,901,683** chips. All-in loss reduction is encouraging but conditional on which hands reach showdown; do not equate this with overall profitability.
+
+**Separate short-stack/ante stress, 3.5/7.5/12BB + forced blind all-ins:** raw wins **48/64 / 45/64 / 45/64**; duplicate pair W/D/L **19/10/3 · 17/11/4 · 17/11/4**. V3.6 and V3.6.1 made identical decisions throughout this stress sample. In contrast to the earlier, smaller V3.6 stress run **56/84 → 61/84**, this fresh set favored V3.4; the supposed stress advantage **did not replicate**.
+
+**Local latency p95/max in milliseconds:** development **3.441/35.161 · 3.395/29.746 · 3.408/26.670**; fresh holdout **3.372/25.666 · 3.369/30.982 · 3.353/51.792**. V3.4 passed **37 tests**, V3.6 **43**, and V3.6.1 **47**, plus official validator on all three. Codex reported **1,792 newly run matches**, zero errors/timeouts/restarts, and matched deals/warmups/snapshots/replays. Restricted Docker sandbox remains unverified. Final **sealed seeds 1001–1200 unused**.
+
+**Decision:** **Keep committed V3.4 as release candidate.** V3.6/V3.6.1 are research artifacts, not proven upgrades; avoid overfitting to Aggressive or short-stack toy tests. New strategy work should test **postflop decision quality against more varied opponents**, perform unbiased fresh paired comparisons and evaluate overall *match wins plus chip-risk metrics*. Before final submission promote an approved version to public `main` and test organizer submission.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
