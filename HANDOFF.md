@@ -163,13 +163,32 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Important:** Do not use `--dangerously-bypass-approvals-and-sandbox` or disable safety controls. The time-critical release still needs a best validated bot on public `main` before **6:30 PM ET**; preserve a robust fallback and report remaining release blockers.
 
+### TASK-CLAUDE-003 — Harden benchmark harness and create independent practice opponents
+**Assigned to:** Alwaleed / Claude, on `alwaleed/exploit-and-testing`. **Status:** Authorized for LOCAL implementation and testing, after TASK-CLAUDE-002 report review. **Do not commit, push, merge, edit `main`, or touch primary teammate's strategy files without new human approval.** `feature/strategy` has committed V3.4, while Codex is developing V3.5 independently.
+
+**Context:** The coordinator reviewed uploaded TASK-CLAUDE-002 source and results. It passes 24 isolated tests with the one real-match test skipped outside the official kit. The sample SHA-256 digest matches the manifest; the three pairing losses reproduce if CSV fields are loaded with correct types. See `main/docs/testing.md` for precise observations.
+
+**Part A — Resolve three independent QA issues first**
+1. Make the harness safely ingest its *own archived `matches.csv`* for rescoring/reproducing earlier runs; explicitly convert `seed` and `a_seat` to integers and validate paired records. Add a regression test showing that naive CSV strings lead to wrong pair counts.
+2. Make a nonzero runner exit code or missing/inconsistent completed-match log visible as an incomplete/error result; do not silently count a crash as a clean match. Add tests.
+3. Replace or qualify claims about Wilson match-rate intervals being **necessarily conservative** under duplicate pairing. Treat pairs (seeds) as clusters; if computing match-rate CIs, bootstrap entire pairs instead of treating all matches as independent. Clearly distinguish team's `W + 0.5D` comparison score from the organizer's final ranking rule.
+
+**Part B — Build diverse *test-only* opponents**
+1. Implement **two original, independent** practice opponents that exercise V3.5's untested weaknesses: one **overfolder** (folds too often to modest postflop pressure) and one **trap/value-heavy player** (slowplays or makes stronger raises with strong holdings). Keep each bot in a clearly labeled *benchmark-only* folder, outside `my_bots/uo_monte/`.
+2. Both must use only permitted public state and legal actions; include deterministic behavior, clear tunable parameters, and explain why they are unrealistic toy archetypes rather than proxies for the real field. Do not copy another finalist's code.
+3. Run validator and small paired-seat sanity checks against existing kit bots, e.g. seeds 101–103. Use the harness and produce reproducible artifacts, but **do not run the reserved final seeds 1001–1200** and do not present toy-opponent results as UO-Monte's tournament win probability.
+4. Do **not** integrate with Codex's uncommitted V3.5, alter the active `bot.py`, or touch `pokercore/`. Later, after both agents' reports and human review, we can benchmark V3.5 against these opponents without editing the strategy.
+
+**Required final report:** paths changed; unit tests and validator outputs; sample paired result; manifest/digest; how the CSV parsing, process exit, and confidence-interval issues were handled; limitations; `git status --short`; proposed integration instructions for the primary teammate. Stop before any commit/push and await approval.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 committed and pushed at `8fe2590`, followed by V3.4 at `a5ea561` (verified remote `feature/strategy` tip). Both changed only the bot and its strategy regression tests.
 - [x] V3.3 local benchmark report reviewed; subsequently committed/pushed at `8fe2590` after human approval.
 - [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
-- [ ] TASK-CLAUDE-002 paired-seat benchmark harness assigned; local implementation/testing authorized; Git writes require Alwaleed's approval.
+- [x] TASK-CLAUDE-002 paired-seat harness completed locally; 25 self-tests reported; 6-match sanity check; files and digest reviewed from uploaded artifacts. **Uncommitted/unpushed pending Alwaleed approval.**
+- [ ] TASK-CLAUDE-003 independent harness hardening and overfolder/trapper toy opponents in progress locally; no Git writes authorized.
 - [x] TASK-CODEX-002 local V3.4 readiness completed; **human approved chronological V3.3/V3.4 checkpoint commits and pushes on `feature/strategy` only; execution pending**. Docker sandbox still untested. No `main` release approval. Claude TASK-CLAUDE-002 continues independently.
 - [ ] TASK-CODEX-003 V3.5 fold-equity local implementation/benchmarks awaiting results; no publication approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
