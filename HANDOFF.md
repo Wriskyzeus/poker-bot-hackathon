@@ -14,7 +14,8 @@
 - `main`: public submission branch. **The final validated strategy has not yet been promoted to main.** Shared documentation updates here are NOT a final submission.
 - `feature/strategy`: last verified committed bot **V3.2** at `cfab27c26222423b46b7293c6416785c7115369e` (`my_bots/uo_monte/bot.py`, `tests/test_uo_monte_bot.py`). Earlier baselines **V3.1** `c12396e` and **V2** `ef760ca` remain in history.
 - `alwaleed/exploit-and-testing`: partner's independent branch; its shared notes were incorporated into `main` for coordination. Do not merge it wholesale or overwrite teammate work.
-- **V3.3 adaptive aggression:** Codex CLI reports implementation and benchmarks completed locally with **32 tests, four official validator scenarios, and 800 local matches**, but V3.3 is **not committed or pushed**. Treat as a *provisional freeze candidate only* pending human approval and restricted-sandbox testing. V3.2 at `cfab27c` is the known-good committed fallback.
+- **V3.3 adaptive aggression:** tested locally, **32 unit tests** and official validator passed; currently uncommitted, with Codex reporting a local snapshot/patch. 
+- **V3.4 free-river value bets:** tested locally with **37 unit tests**, official validator, and **800 match runs** comparing V3.3 with V3.4. V3.4 scored **323/400** vs **320/400** for V3.3 (development seeds 1–20 plus fresh holdout 41–60), with a reported 39% reduction in combined check-raise losses but fewer realized in-position river value-bet chips. **Not yet committed or pushed.** V3.2 at `cfab27c` remains the known-good committed fallback.
 
 ## Recent benchmark evidence
 Local matched-seed comparisons, 20 seeds × two starting seats per opponent (40 matches per version per opponent). Floorfix used **fixed 50/100 blinds**, and the custom opponents used **rising blinds**; the benchmark pool is not a representation of the true finalist field.
@@ -123,13 +124,19 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 
 **Return for review:** Modified file list; runnable commands; self-test results; example CSV/JSON; pair scoring explanation; limitations; `git status --short`. Stop and await human/coordinator review before new work. Human should send the report to ChatGPT to confirm the next assignment.
 
+### Coordinator review — V3.4 report received
+- Codex reports **V3.4 local/uncommitted**, tested with 37 unit tests and official validator; compare to V3.3's local snapshot, not merely the pushed V3.2 baseline.
+- Practice benchmark: V3.4 **323/400** wins vs V3.3 **320/400** on seeds 1–20 and fresh holdout 41–60, both seats and five opponents. Gains were primarily against Mixed; check-raise losses decreased **13,004 → 7,884** combined, although holdout check-raise losses increased. River value betting became more selective, with fewer total realized chips from IP river bets.
+- **No new strategy task yet.** Current priority is safeguarding the local V3.3/V3.4 artifacts and testing a chosen candidate under true restricted sandbox and duplicate-pair scoring before final promotion. Only humans can authorize commit/push/merge.
+- **Release risk:** `main` still contains the starter bot. Keep that visible in all task handoffs; before 6:30 PM ET ensure a vetted UO-Monte bot is on public `main` with the correct submission identifier.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
 - [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
 - [ ] TASK-CLAUDE-002 paired-seat benchmark harness assigned; local implementation/testing authorized; Git writes require Alwaleed's approval.
-- [ ] TASK-CODEX-002 V3.4 river value-betting local task assigned; V3.3 checkpoint Git write and all later writes still require human approval.
+- [x] TASK-CODEX-002 V3.4 local task completed per Codex report; 37 unit tests, four validator scenarios, +3 of 400 wins over V3.3. Awaiting human approval for Git writes, independent sandbox verification and any release. Claude's TASK-CLAUDE-002 proceeds independently.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
