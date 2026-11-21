@@ -1,12 +1,14 @@
-"""UO-Monte Version 2: preflop ranges plus bounded postflop Monte Carlo.
+"""UO-Monte 3.1: preflop ranges, postflop equity, and river defense.
 
 The ranges are coarse heuristics, not a solved/GTO chart.  They trade mixed
 strategy precision for fast, reproducible decisions and legal actions.
-Postflop equity is initially estimated against a uniformly random opponent
-hand. That is deliberately not presented as equity versus a raiser's range.
+When facing a river bet, weight exact showdown outcomes by the opponent's
+observed aggression and the current betting line.
 """
 
 import random
+from bisect import bisect_left, bisect_right
+from itertools import combinations
 
 import eval7
 
@@ -229,10 +231,101 @@ def _value_bet_target(state, equity):
     return max(minimum, int(round(pot * 0.60)))
 
 
+def _river_aggression(state, opponent):
+    """Shrink river aggression toward earlier streets and a cautious prior.
+
+    Count the first voluntary decision per street per hand. A small window
+    of repeated raises in a single pot should not make a player look loose.
+    Match history has revealed hole cards but no historical boards, so it
+    cannot reliably label a showdown as a bluff.
+    """
+    counts = {"flop": [0, 0], "turn": [0, 0], "river": [0, 0]}
+    seen = set()
+    for event in state.get("match_action_log", []):
+        street = event.get("street")
+        hand = event.get("hand_num")
+        action = event.get("action")
+        if (opponent is None or event.get("bot_id") != opponent
+                or street not in counts or hand is None
+                or hand == state.get("hand_num")
+                or action not in ("check", "call", "fold", "raise", "all_in")
+                or (hand, street) in seen):
+            continue
+        seen.add((hand, street))
+        counts[street][0] += action in ("raise", "all_in")
+        counts[street][1] += 1
+
+    flop_bets, flop_chances = counts["flop"]
+    turn_bets, turn_chances = counts["turn"]
+    river_bets, river_chances = counts["river"]
+    earlier = (2 + flop_bets + turn_bets) / (8 + flop_chances + turn_chances)
+    return (4 * earlier + river_bets) / (4 + river_chances)
+
+
+def _river_range_equity(state):
+    """Return equity against the betting range and a tighter raise-calling range."""
+    hole = _card_strings(state.get("your_cards", []))
+    board = _card_strings(state.get("community_cards", []))
+    if len(hole) != 2 or len(board) != 5 or len(set(hole + board)) != 7:
+        return 0.0, 0.0
+    community = [eval7.Card(card) for card in board]
+    hero = eval7.evaluate(community + [eval7.Card(card) for card in hole])
+    deck = [eval7.Card(card) for card in _remaining_cards(hole + board)]
+    ranks = sorted(eval7.evaluate(community + [a, b]) for a, b in combinations(deck, 2))
+    losses_end = bisect_left(ranks, hero)
+    ties_end = bisect_right(ranks, hero)
+
+    def equity_from(start):
+        wins = max(0, losses_end - start)
+        ties = max(0, ties_end - max(start, losses_end))
+        return (wins + 0.5 * ties) / (len(ranks) - start)
+
+    opponent = _opponent_id(state)
+    aggression = _river_aggression(state, opponent)
+    opponent_raises = [
+        action for action in state.get("action_log", [])
+        if action.get("bot_id") == opponent and action.get("action") in ("raise", "all_in")
+    ]
+    street_raises = sum(action.get("street") == "river"
+                        and action.get("action") in ("raise", "all_in")
+                        for action in state.get("action_log", []))
+    barrels = len({action.get("street") for action in opponent_raises
+                   if action.get("street") in ("flop", "turn")})
+    owed = state["amount_owed"]
+    size = owed / max(1, state["pot"] - owed)
+    pressure = min(1.0, 0.35 * max(0, street_raises - 1) + 0.18 * barrels
+                   + 0.28 * max(0.0, size - 0.5))
+    # Frequent aggression broadens both the value cutoff and the unfiltered
+    # component. It is a proxy for bluffs and thin bets, not a bluff count.
+    broad_weight = min(0.90, max(0.08, 1.55 * aggression - 0.12 - 0.35 * pressure))
+    value_width = max(0.08, 0.16 + 0.42 * aggression - 0.20 * pressure)
+    value_equity = equity_from(int((1 - value_width) * len(ranks)))
+    continuing = equity_from(int((1 - value_width * 0.5) * len(ranks)))
+    return broad_weight * equity_from(0) + (1 - broad_weight) * value_equity, continuing
+
+
+def _river_defense(state):
+    owed = state["amount_owed"]
+    stack = state["your_stack"]
+    paid = min(stack, owed)
+    # The pot already includes the outstanding bet. Excess chips are returned
+    # when an all-in call cannot cover that bet.
+    pot = max(0, state["pot"] - (owed - paid))
+    price = paid / max(1, pot + paid)
+    equity, raise_equity = _river_range_equity(state)
+    if equity < price + 0.02:
+        return _respond("fold", state)
+    if stack > owed and raise_equity >= 0.70:
+        return _respond(int(round((pot + paid) * 0.65)), state)
+    return _respond("call", state)
+
+
 def _postflop(state):
     owed = max(0, int(state.get("amount_owed", 0)))
     pot = max(0, int(state.get("pot", 0)))
     street = state.get("street")
+    if street == "river" and owed:
+        return _river_defense(state)
     simulations = POSTFLOP_SIMULATIONS.get(street, POSTFLOP_SIMULATIONS["river"])
     equity = estimate_equity(
         state.get("your_cards", []), state.get("community_cards", []),

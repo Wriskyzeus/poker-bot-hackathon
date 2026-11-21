@@ -96,12 +96,11 @@ class PostflopTests(unittest.TestCase):
         self.assertEqual(action, {"action": "fold"})
 
     def test_postflop_can_fold_when_bet_covers_stack(self):
-        with patch.object(BOT, "estimate_equity", return_value=0.10):
-            action = BOT.decide(self.postflop(street="river", your_cards=["2c", "3d"],
-                                              community_cards=["Ks", "9d", "4h", "2s", "7c"],
-                                              pot=4000, amount_owed=2000,
-                                              current_bet=2000, your_stack=2000,
-                                              can_check=False))
+        action = BOT.decide(self.postflop(street="river", your_cards=["2c", "3d"],
+                                          community_cards=["Ks", "9d", "4h", "2s", "7c"],
+                                          pot=4000, amount_owed=2000,
+                                          current_bet=2000, your_stack=2000,
+                                          can_check=False))
         self.assertEqual(action, {"action": "fold"})
 
     def test_short_stack_call_remains_call(self):
@@ -110,6 +109,59 @@ class PostflopTests(unittest.TestCase):
                                               current_bet=500, your_stack=500,
                                               can_check=False))
         self.assertEqual(action, {"action": "call"})
+
+
+class RiverDefenseTests(unittest.TestCase):
+    def river(self, owed=650, **overrides):
+        values = {
+            "street": "river", "hand_num": 20,
+            "your_cards": ["Kc", "5d"],
+            "community_cards": ["3s", "Qd", "Ks", "Ts", "7s"],
+            "pot": 1100 + owed, "amount_owed": owed, "current_bet": owed,
+            "min_raise_to": 2 * owed, "your_stack": 4000,
+            "action_log": [{"bot_id": "opponent", "street": "river", "action": "raise"}],
+        }
+        values.update(overrides)
+        return state(**values)
+
+    def history(self, actions):
+        return [{"bot_id": "opponent", "street": "river", "hand_num": hand, "action": action}
+                for hand, action in enumerate(actions)]
+
+    def test_rare_value_bet_folds_the_same_hand_that_catches_frequent_bluffs(self):
+        selective = self.history(["check"] * 11 + ["raise"])
+        frequent = self.history(["raise"] * 10 + ["check"] * 2)
+        self.assertEqual(BOT.decide(self.river(match_action_log=selective)), {"action": "fold"})
+        self.assertEqual(BOT.decide(self.river(match_action_log=frequent)), {"action": "call"})
+
+    def test_large_bet_after_multiple_barrels_folds_a_marginal_bluff_catcher(self):
+        history = self.history(["raise"] * 3)
+        self.assertEqual(BOT.decide(self.river(match_action_log=history)), {"action": "call"})
+        actions = [{"bot_id": "opponent", "street": street, "action": "raise"}
+                   for street in ("flop", "turn", "river")]
+        self.assertEqual(BOT.decide(self.river(owed=1600, action_log=actions,
+                                              match_action_log=history)), {"action": "fold"})
+
+    def test_missing_history_and_repeated_actions_use_a_conservative_prior(self):
+        self.assertEqual(BOT.decide(self.river()), {"action": "fold"})
+        history = self.history(["raise"])
+        self.assertEqual(BOT._river_aggression(self.river(match_action_log=history * 20),
+                                               "opponent"),
+                         BOT._river_aggression(self.river(match_action_log=history), "opponent"))
+
+    def test_nut_flush_can_reraise_without_history(self):
+        action = BOT.decide(self.river(your_cards=["As", "Js"]))
+        self.assertEqual(action, {"action": "raise", "amount": 1560})
+
+    def test_covered_call_uses_only_contestable_chips(self):
+        with patch.object(BOT, "_river_range_equity", return_value=(0.28, 0.0)):
+            action = BOT.decide(self.river(owed=800, pot=1200, your_stack=200))
+        self.assertEqual(action, {"action": "call"})
+
+    def test_river_checked_to_hero_keeps_v2_value_bet(self):
+        with patch.object(BOT, "estimate_equity", return_value=0.90):
+            action = BOT.decide(self.river(owed=0, can_check=True))
+        self.assertEqual(action, {"action": "raise", "amount": 660})
 
 
 class EquityTests(unittest.TestCase):
