@@ -83,7 +83,7 @@ done
 
 ## Version 2 Monte Carlo benchmark — November 21, 2026
 
-**Source:** report from local Codex CLI run in the user's WSL Ubuntu environment; the underlying match logs were not independently uploaded. The V2 changes are still **local/uncommitted** on `feature/strategy`; the V1.1 reference was isolated from commit `26c0a93`.
+**Source:** report from local Codex CLI run in the user's WSL Ubuntu environment; the underlying match logs were not independently uploaded. V2 was subsequently committed to `feature/strategy` at `ef760ca5bf14b367feac9accb3f4b3fbeb478181`; the V1.1 reference was isolated from commit `26c0a93`.
 
 Both versions played **seeds 1–20 in both seat orders** against `bots/caller`: 40 freezeout matches each, 10,000 starting chips, standard blind schedule.
 
@@ -104,6 +104,27 @@ Both versions played **seeds 1–20 in both seat orders** against `bots/caller`:
 - **Compute caveat:** The measured local maximum of 7.519 ms is far under the 2,000 ms deadline, but official sandbox (0.5 CPU, 768 MB) timing should still be verified.
 - **Release decision:** Use V2 as the experimental development baseline. Retain V1.1 commit `26c0a93` and a stable `main` until V2 beats an opponent that bets and raises postflop and meets sandbox constraints.
 - **Next:** Implement test-only postflop aggressive, tight and randomized benchmark opponents outside the collected `my_bots/uo_monte/` folder; evaluate repeated seeded matches with swapped seats, collect logs and inspect costly misplays. Do not modify `pokercore/` or merge into `main` prematurely.
+
+## Aggressive / tight / mixed local benchmarks — November 21, 2026
+
+**Source:** User-shared screenshots of the local Codex CLI final report. Tests used the official local engine for heads-up freezeouts, 10,000-chip starting stacks, seeds 1–20 in both seat orders, for each of three benchmark opponents and each strategy version (**240 matches total**).
+
+| Practice opponent | V1.1 wins / 40 | V2 wins / 40 | V2 by first / second seat | V2 p95 / max |
+|---|---:|---:|---|---|
+| Aggressive | 2 (5%) | 37 (92.5%) | 20/20, 17/20 | 3.671 / 5.999 ms |
+| Tight | 39 (97.5%) | 22 (55%) | 8/20, 14/20 | 3.634 / 5.345 ms |
+| Mixed | 2 (5%) | 20 (50%) | 9/20, 11/20 | 3.701 / 7.278 ms |
+
+Reported **V2 decision p95 ~3.682 ms and maximum ~7.278 ms across 9,126 decisions** in local execution. **Zero errors, timeouts or restarts** reported, and all three benchmark opponents passed the official validator. Sandbox timing remains unverified.
+
+**Three diagnosed leaks:**
+1. Calling too loosely against strong betting ranges. Report says all 20 terminal river calls against Tight lost chips, costing 36,645 compared with folding those decisions; equity against a random opponent hand is not equity against a selected bet range.
+2. Excessive one-pair raises or stack commitments: report cites a loss of 9,790 chips versus top set after repeatedly raising top pair.
+3. Thin river value bets can provoke costly check-raises: versus Mixed, 21 of 34 in-position river bets reportedly did worse than checking.
+
+**Decision:** V2 is a credible development base (especially against caller/aggressive), but *not yet proven universally superior*: V1.1 is far stronger than V2 against this Tight practice opponent. Keep V1.1 saved, avoid merging V2 to `main`, and improve V3 via opponent-specific ranges and better check-back/value-bet/raise decisions. Do not overfit exclusively to these three home-built practice bots. Independent external-bot benchmarking is on hold pending organizer approval (see `docs/external-bot-benchmarking.md`).
+
+**Git status at last check:** Version 2 was pushed to `feature/strategy` in commit `ef760ca5bf14b367feac9accb3f4b3fbeb478181`. `main` holds documentation and the original tournament template; user is collecting organizer approval before importing external bots.
 
 ## Checklist
 
