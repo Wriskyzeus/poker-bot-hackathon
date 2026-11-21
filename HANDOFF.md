@@ -549,6 +549,9 @@ Secondary: V3.4's wide button opens then folds to 3bet incurred substantial real
 
 **Next coordination:** Codex TASK-CODEX-012 currently underway with GPT-6.2 Astra Extra High on isolated V6-P investigation; it was sent the TASK-009 V6-Stab addendum. **Do not restart or interrupt expensive running work**. Once Codex has a frozen **V6-Stab** candidate with meaningful changed actions, human can authorize Claude read-only acceptance on **861–880**, both seats/identical hand IDs; first deliver QA files to Codex, then compare to protected V3.4 against pressure + new counterexamples + established opponents, official validator/latency/failure metrics and real BB/hand difference. If no candidate, no pointless Phase B or new Claude research assignment. Target submission by actual **6:30 PM ET**, not 5:30; user confirmed registration and V3.4 public main blob **`27acb669ee3ac35172a88293c198182b56db0f78`**. Full phase report in `docs/testing.md`.
 
+### TASK-CLAUDE-010 — verified benchmark-only GitHub publication (November 21, 2026)
+**NOW PUBLISHED:** Alwaleed's benchmark branch `alwaleed/exploit-and-testing` is verified at **`e766d680f5ad6d0b9350ced201e559b2a78eec66`**. This commit added the four TASK-010 check-stab practice bots (`checkfold90`, `checkcall50`, `checktrap`, `shifter`), source generator/build script, `tests/test_stabtest_opponents.py`, `benchmarks/stab_audit.py`—**eight benchmark-only files**. User-supplied patch SHA256 **`aed4e8451fc5cb7655a8661ea5cb758dac9066656e33b65436ee99754af44651`** applied cleanly in an empty scratch repo, all 8 Python sources parse, and Git blob hashes on GitHub match delivered patch. No `my_bots/` or `pokercore/` file changes. Supersedes prior warnings that these sources are unpublished. Codex can fetch them into a **disposable testing worktree**, not its current working strategy branch or protected public `main`. Claude Phase B remains gated on *frozen V6-Stab*, human read-only authorization and untouched independent seeds 861–880. No further Claude source publication task is needed. Full transfer provenance in `docs/testing.md`.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -581,7 +584,7 @@ Secondary: V3.4's wide button opens then folds to 3bet incurred substantial real
 - [x] TASK-CLAUDE-008 benchmark handoff completed; independently verified remote partner branch `6b2e7d5` includes task006/007 opponents, portable scripts, tests and fixtures; V5-R independent rerun unnecessary because it changed zero decisions.
 - [x] TASK-CLAUDE-009 Phase A complete: major **postflop checked-to pressure fold 641/643** finding, offline modeled +0.30BB/hand, **not yet tested**; no V5-S/A Phase B because NO-GO. Preserve 861–880.
 - [x] TASK-CLAUDE-010 Phase A complete: controlled retrospective 0.5pot response replay and 200-entry public-history counter validated in supplied scripts, four new benchmark-only stab adversaries/test suite built locally. **Not yet published, Phase B pending frozen V6-Stab**.
-- [ ] Human authorization to scope/push four TASK-010 benchmark-only opponents to `alwaleed/exploit-and-testing` so Codex can fetch; no core/main bot modification.
+- [x] TASK-CLAUDE-010 benchmark-only publication **verified on remote partner branch** at `e766d68`; new four opponents and testing tools available for Codex in disposable worktree; no tournament bot modification.
 
 ## Open questions and decisions
 1. **Legacy `_opponent_history` vs new tracker:** New tracker should provide independent features and a well-tested optional adapter. No immediate replacement. Ask Codex to integrate only after approval.
