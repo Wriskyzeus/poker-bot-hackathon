@@ -374,6 +374,21 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 
 **Coordinator recommendation:** V3.4 remains the protected *release fallback*; V3.6 is a promising focused upgrade for shallow stacks, **pending aggressive-opponent regression analysis and independent holdout validation**, particularly against Claude's new independently designed opponents. Preserve isolated V3.6 code and the V3.5 recovery artifacts; **do not commit/push/merge** V3.6 without explicit human approval. Avoid modifying or overwriting partner branches. Public `main` must receive a human-approved tested release before **6:30 PM ET**.
 
+## Multi-agent development — Claude TASK-CLAUDE-003 review (November 21, 2026)
+
+**Source and provenance:** Human uploaded `TASK-003-package.zip` containing `paired_eval.py`, `README.md`, `tests/test_paired_eval.py`, `tests/test_benchmark_opponents.py`, `opponents/overfolder/bot.py`, `opponents/trapper/bot.py` and example CSV/JSON/summary artifacts. These are **local TASK-003 work, not yet committed/pushed** according to the supplied manifest (`git_status_short` contains untracked `benchmarks/` and opponent tests). TASK-002's earlier harness **was** committed to partner branch `alwaleed/exploit-and-testing` at `1bd9fa6629b50992f4861d4b061b42a8368dd570`, verified independently on GitHub.
+
+**What Claude changed:** Hardened `benchmarks/paired_eval.py` with a typed, validated `--rescore` CSV loader, detection of nonzero process exits even when log output looks complete, and **pair-cluster bootstrap** uncertainty instead of independent-match Wilson intervals. Kept qualification pair W/D/L distinct from the team's arbitrary `W + 0.5D` comparison score. Added **two original deterministic test-only opponents** under `benchmarks/opponents/`: `overfolder` (excessively folds to medium postflop bets) and `trapper` (strong-hand slowplay/check-raise/large river betting); not submitted UO-Monte strategy files.
+
+**Independent limited verification (uploaded files):** After placing the package into its documented repo-relative paths, I ran the provided standalone Python test scripts: **45 test cases, one skipped live-engine test**, in `test_paired_eval.py` and **17 passed** in `test_benchmark_opponents.py`, for **61 passed + 1 skipped** in total. The live-engine test could not run outside the official kit. Before arranging the files to the expected `benchmarks/` layout, direct execution from the ZIP root failed imports—this was a packaging/layout issue, not failing algorithm assertions.
+
+**Example result verification:** Using the uploaded `example_matches.csv`, the new typed CSV loader and summary reproduced **3 completed pairs (2W/1D/0L)** and six complete matches, with **5/6 wins for overfolder against Caller**. The recalculated deterministic digest matched `example_manifest.json`: `bdd1fca3265d79b70eac58b5b65b9134612f4a53cbc6a6a8e2453f2a3d3adcf2`. These **three seeds (101–103)** are a harness/opponent sanity check, **not evidence about UO-Monte**. The manifest reports zero timeouts/errors/restarts. I have not independently rerun official `play.py`, validators or Docker due to the limited uploaded package.
+
+**Quality and constraints:** Final sealed seeds **1001–1200** are refused by default, and the readme explicitly warns about small samples, lack of live Docker timing and unavailable p95 data. The opponent strategies are deliberately unrealistic caricatures; wider tournament claims require many opponents, matched seeds/seats, and the official restricted sandbox.
+
+**Next phase:** Recommend Alwaleed approve pushing the reviewed TASK-003 files on `alwaleed/exploit-and-testing` (no merge into `main`), then have Claude run independent benchmark probes on the **committed V3.4** bot against both new opponents, report specific weaknesses and prepare actionable recommendations for Codex once its V3.6.1 task completes. Separate workstreams; no edits to `my_bots/uo_monte/bot.py` from Claude.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
