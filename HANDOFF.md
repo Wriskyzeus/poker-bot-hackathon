@@ -103,11 +103,32 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 
 **Highest-priority release issue:** public `main` still contains the starter bot, so the team must deliberately deploy a tested release there **before the 6:30 PM ET cutoff**. Codex is presently running independent V3.4 development; do not interrupt or overwrite its uncommitted files.
 
+### TASK-CLAUDE-002 — Build reproducible paired-seat benchmark harness
+**Assigned to:** Alwaleed / Claude Code. **Status:** Approved to implement and test LOCALLY on `alwaleed/exploit-and-testing`; do not commit, push, merge, or modify `main` until the human teammates approve the diff and test results. **Independent of Codex V3.4.**
+
+**Why:** TASK-CLAUDE-001 identified that our results lack fully reproducible per-seed data, and the official tournament evaluates duplicate seated pairs. A rigorous harness can benefit any future UO-Monte version without changing its strategy.
+
+**Scoped deliverable:** A standalone local test harness outside `my_bots/uo_monte/` and `pokercore/`, plus self-tests. Reuse existing scripts where possible rather than replacing them. For example `benchmarks/paired_eval.py` and `tests/test_paired_eval.py`; choose paths after inspecting the partner branch and report them.
+
+**Requirements:**
+1. Read current `origin/main:AGENTS.md` and `HANDOFF.md`, inspect the official `play.py` and tournament scoring documentation and local repository/branch status. Do not assume a CLI flag or score interpretation without checking the code.
+2. Harness runs two specified bot folders with the same seed in both seat assignments, using official match runner for all gameplay; never access hidden cards or patch the engine.
+3. Save per-seed, per-seat results in a reproducible development artifact (CSV/JSON outside the submitted bot), recording opponent, seed, blind format, initial stacks, outcome, crashes, timeouts, and timing where exposed by runner; explicitly mark fields unavailable from the runner. Log exact commands and versions/commit SHA. It is acceptable for development tools to write local files; **the submitted `bot.py` may not**.
+4. Report both raw match wins and **duplicate-pair win/draw/loss** following the organizer's actual defined scoring rules. Include seat-stratified summaries, observed win rates and uncertainty bounds with documented assumptions; if qualification scoring cannot be determined from source, flag it clearly rather than inventing it.
+5. Demonstrate harness on a tiny self-test / sanity run using only already available bots (e.g. `bots/caller`, `bots/template`) or another safe existing local pair. A short test on seeds 41–43 is enough to check it functions. **Do not run reserved final sealed seeds 1001–1200.** Never claim a new strategy win rate from this small sanity test.
+6. Add tests for swapped-seating correctness, deterministic output formatting, incomplete/error matches, correct pair scoring, and uncertainty calculation. If Docker exists, document (not necessarily execute) how to run restricted sandbox timing. Do not install additional system software without Alwaleed's approval.
+7. Provide a simple user guide: exact launch commands, output format, limitations, and why it is statistically better than reporting only a total match win rate.
+
+**Boundaries:** Do NOT modify `my_bots/uo_monte/bot.py`, `pokercore/`, `main`, `feature/strategy`, `AGENTS.md`, or `HANDOFF.md` on your branch during this task. Do not incorporate someone else's finalist code. Do not start the opponent-tracker implementation or new opponent bots yet. Do not commit or push without your teammate Alwaleed's explicit approval. Codex owns all actual strategy changes.
+
+**Return for review:** Modified file list; runnable commands; self-test results; example CSV/JSON; pair scoring explanation; limitations; `git status --short`. Stop and await human/coordinator review before new work. Human should send the report to ChatGPT to confirm the next assignment.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
-- [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above. Claude's **next** task requires human authorization.
+- [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
+- [ ] TASK-CLAUDE-002 paired-seat benchmark harness assigned; local implementation/testing authorized; Git writes require Alwaleed's approval.
 - [ ] TASK-CODEX-002 V3.4 river value-betting local task assigned; V3.3 checkpoint Git write and all later writes still require human approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
