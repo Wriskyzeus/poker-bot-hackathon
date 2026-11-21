@@ -130,13 +130,20 @@ These reflect the current *committed* `feature/strategy` bot, not proposed code:
 - **No new strategy task yet.** Current priority is safeguarding the local V3.3/V3.4 artifacts and testing a chosen candidate under true restricted sandbox and duplicate-pair scoring before final promotion. Only humans can authorize commit/push/merge.
 - **Release risk:** `main` still contains the starter bot. Keep that visible in all task handoffs; before 6:30 PM ET ensure a vetted UO-Monte bot is on public `main` with the correct submission identifier.
 
+### TASK-CODEX-002 — Local readiness follow-up (received November 21, 2026)
+**Status:** V3.4 tested, but neither V3.3 nor V3.4 committed/pushed. Codex reports patch-and-snapshot reconstruction of both from committed V3.2, passing **32 tests for V3.3**, **37 for V3.4** and all four official validator scenarios. Official local runner: **72 freezeouts, 5,949 decisions, zero errors/timeouts/restarts**, rising blinds/antes/198 short-stack decisions/forced blind all-ins, local p95 **2.836 ms**, maximum **4.369 ms**. **Docker unavailable (make sandbox exit 127)**, so official half-core/memory/network/read-only isolation remains unverified.
+
+Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior development and holdout matches re-scored as **V3.3 124W/72D/4L vs V3.4 128W/67D/5L** across 200 pairs. Still not a compelling performance difference. Full context in `docs/testing.md`.
+
+**Next release decision:** human must explicitly approve staged chronological commits/pushes for V3.3 and V3.4 to `feature/strategy`, and approval to place a known-good bot on public `main`. Do not overwrite the V3.4 uncommitted workspace or have Claude edit it. Prioritize a Docker-capable machine or alternative organizer-run sandbox verification, but don't delay deploying a tested fallback until the cutoff.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 local benchmark report received and documented: 32 unit tests, four validator scenarios, 800 matches, 318/400 vs V3.2 316/400. **Uncommitted; no approval yet to publish.**
 - [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
 - [ ] TASK-CLAUDE-002 paired-seat benchmark harness assigned; local implementation/testing authorized; Git writes require Alwaleed's approval.
-- [x] TASK-CODEX-002 V3.4 local task completed per Codex report; 37 unit tests, four validator scenarios, +3 of 400 wins over V3.3. Awaiting human approval for Git writes, independent sandbox verification and any release. Claude's TASK-CLAUDE-002 proceeds independently.
+- [x] TASK-CODEX-002 V3.4 local work and follow-up readiness complete: 37 tests, validator, 72 local freezeouts, 24 fresh pairings. **Uncommitted; Docker sandbox untested (Docker unavailable).** Requires human release/checkpoint approval. Claude TASK-CLAUDE-002 continues independently.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
