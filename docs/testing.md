@@ -452,6 +452,32 @@ Total hand net reported **+1,272,000 chips vs Overfolder** and **+1,216,000 chip
 
 **Limitations:** all three structures use only toy opponent implementations; flat test is 10BB, not sub-5BB; scripted examples are derived from offline match logs with showdown cards that the live bot must never access prematurely; no live official Docker timing; the coordinator verified aggregate consistency, not reproduction from original `play.py` logs (the uploaded ZIP has summary tables, scripts and selected action traces, not all raw per-hand match logs). No strategy code is promoted or committed by this review.
 
+## Version 3.7 scoped flop/turn bet-sizing experiment — November 21, 2026
+
+**Report source:** user-provided Codex CLI screenshots on completion of TASK-CODEX-006; coordinator has **not independently rerun the benchmark** or inspected the uncommitted patch. **V3.7 remains an uncommitted isolated worktree snapshot and patch; protected V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b` remains last remote `feature/strategy` commit.** V3.5, V3.6 and V3.6.1 recovery artifacts reportedly remain intact.
+
+**Diagnosed opportunities:** In existing V3.4 logs, **9,182 free-to-check flop/turn decisions** were counted. Among actual responses to opening bets, Caller called **697/697**, Floorfix called **507/698**, and Aggressive raised or shoved over **53/113**. These denominators are specific responses to actual bets, not inferred opportunities to respond to nonexistent bets. None establishes how much a hypothetical alternative bet would have earned.
+
+**Implementation:** Board texture, made-hand class, effective stack, position, initiative and sampled opponent responses shaped **smaller bet sizing** for selected medium-strength pairs. No preflop, river or postflop facing-bet changes; no semibluff expansion because response evidence was insufficient. **141 of 19,892 eligible decisions changed** across **69 matches**, **all changes were smaller bets**, no additional betting events and no larger bets. Example: holdout seed 424, Floorfix, seat 1 hand 117, pocket aces on `Q♠ J♣ 2♣` flop, bet size **264 → 167**, Floorfix called with pocket threes, and V3.7 reportedly won 851 net hand chips. One observed hand does not establish the counterfactual value of the sizing change.
+
+| Opponent | Development seeds 401–420, V3.4 → V3.7 wins/40 | Holdout seeds 421–440, V3.4 → V3.7 wins/40 |
+|---|---:|---:|
+| Caller (rising blinds) | 40 → 40 | 40 → 40 |
+| Aggressive (rising) | 31 → 31 | 30 → 30 |
+| Tight (rising) | 27 → 27 | 32 → 32 |
+| Mixed (rising) | 26 → 25 | 25 → 25 |
+| Floorfix (flat 50/100) | 31 → 31 | 32 → 34 |
+| **Raw wins/200** | **155 → 154** | **159 → 161** |
+| **Duplicate pair W/D/L / 100** | **56/43/1 → 55/44/1** | **61/37/2 → 63/35/2** |
+
+**Combined wins/400: V3.4 314, V3.7 315**; combined duplicate pairs **117W/80D/3L → 118W/79D/3L**. Difference is narrow, concentrated in Floorfix and not sufficient evidence of a superior strategy.
+
+**Independent opponent diagnostic:** From separately published partner branch `alwaleed/exploit-and-testing` at `421b70e`, Overfolder and Trapper passed validator and ran on fresh diagnostic seeds 441–450 (20 matches each per opponent per version; **80 matches total**). **All decisions identical**: both versions won **16/20 vs Overfolder** and **14/20 vs Trapper**. These caricature bots do not bluff, and are no guarantee of generality.
+
+**Overall impact and safety:** Gross showdown chip losses across development + holdout **2,726,684 → 2,773,319** (more losses under V3.7). Unit tests **42 passed**, all **four official validator scenarios passed**. Across reported **880 matches** zero errors/timeouts/restarts. Local decision latency development p95/max **3.253/20.824 → 3.233/23.181 ms**; holdout **3.196/28.474 → 3.214/20.765 ms**. Restricted Docker sandbox unavailable; final sealed seeds **1001–1200 unused**.
+
+**Coordinator decision:** Retain V3.4. Further marginal sizing rules are poor expected value for remaining hackathon time. The **higher-leverage hypothesis** from Claude TASK-004 is opponent-conditional bet defense: weak flop/turn float calls, overcalling large river value bets, and failing to recognize strong check-raises against value-heavy opponents. Future **calibrated opponent range and action-EV** work must include bluff-capable opponents and Bayesian shrinkage, not hardcoded folds to Overfolder/Trapper. Research into externally licensed CFR tables continues separately under Claude TASK-005 until rights and table applicability are confirmed. Do not edit public `main` strategy or promote any experimental version without human release authorization.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
