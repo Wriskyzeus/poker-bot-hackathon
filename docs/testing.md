@@ -556,6 +556,17 @@ Using exact pinned upstream SHAs from the report, independently opened repositor
 
 **Important release gate:** Human teammates should **explicitly authorize** promotion of verified committed V3.4 to public `main` now or before the 5:30 PM readiness gate, verify the new public blob SHA/commit, `uo_monte` identity and submission form by the 6:30 PM ET deadline. This is independent of ongoing experiments. **Do not automatically publish without human approval.** Claude TASK-006 is separately building bluff-capable adversarial practice opponents. Future experimentation should be targeted to **stronger opponent diversity** and genuinely high-leverage changes, not simply another small generic threshold shift.
 
+## V3.4 public main baseline release — November 21, 2026
+
+**Publication authorized by primary human teammate:** "If you want to push version 3.4 to main, do so so we can have something in main." Only the validated V3.4 strategy files were copied to public `main`, leaving `feature/strategy` and the experimental worktrees unchanged:
+
+1. `my_bots/uo_monte/bot.py` — source commit `a5ea561ff5b70d5a17533579bfc6557b2979622b`; Git blob SHA **`27acb669ee3ac35172a88293c198182b56db0f78`**, exact match independently verified after publication. File replacement commit **`61e4fcd3b98f381ebaff8811e6557fba858d8422`**.
+2. `tests/test_uo_monte_bot.py` — exact source blob SHA **`a2c33fe0279f0ba63d803d1f6533f915086889c7`**. Newly created on `main` in commit **`d2a074659f015d2349cd229777ab979699c99176`**; GitHub `main` tip independently verified to be that commit after both writes.
+
+**GitHub verification:** repository public, default branch `main`, `main` now serves V3.4 (not the organizer starter) and tests are byte-identical to protected V3.4. `feature/strategy` SHA remains `a5ea561`. **Test provenance:** prior Codex local release dry-run reports **37 unit tests passed**, official validator passed, 44-hand Caller smoke won with no errors; the coordinator did **not** rerun tests after direct GitHub copy. The strategy contents were verified exact, so this is a publication/byte-identical verification, **not new sandbox validation**. The Docker 0.5 CPU/768 MB sandbox remains **unverified** locally.
+
+**Form status:** Human was completing organizer's submission form with GitHub repository and strategy description; **clicking Submit and actual form acceptance are not verified by coordinator**. Confirm team name exactly `uo_monte`, public URL, form's required checkbox (the repo is public and V3.4 passed local validator), then **submit form and retain confirmation**. The official code collection uses public `main` at 6:30 PM ET; subsequent enhancements must be tested and human-approved before replacing this baseline. **No additional source changes should be made automatically**.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
