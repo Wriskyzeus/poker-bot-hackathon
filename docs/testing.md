@@ -706,6 +706,27 @@ All three had **identical action traces and results**. No measure of performance
 **Next Claude assignment:** TASK-CLAUDE-009 independent *frozen candidate* verification against newly available opponents after Codex TASK-011; until a frozen version is given and read-only publication approved, use existing 006/007 cached logs to develop a **short, reproducible audit of high-impact preflop pressure leaks** (size-aware 2x/2.2x/3x defense, selective 3bet/4bet, value-only 4bet punishment, stack/ante context). Do not run its independent untouched acceptance seeds **861–880** before freezing candidate, nor use sealed **1001–1200**. If TASK-011 shows no convincing changes, return source-level diagnostic recommendations instead of gratuitous full simulation. No automatic main code change; no Git push without explicit approval.
 
 
+## TASK-CODEX-011 — V5-S size-aware and V5-A reraise experiments (November 21, 2026)
+
+**Source:** User screenshot of Codex CLI final TASK-CODEX-011 report. Coordinator independently reviewed published V3.4 code in GitHub, but **has not inspected local V5-S/A patch files, per-hand logs or SHA-256 manifest**. Codex recommended **NO-GO for both**, preserving validated V3.4 `a5ea561` as released `main` (bot blob SHA `27acb669ee3ac35172a88293c198182b56db0f78`). No commit/push/merge/release by Codex.
+
+**Exact matched seat/hand-ID comparison:** 10 practice opponents, standard rising blinds except Floorfix flat 50/100, 400 matches per version per block (200 paired seeds):
+
+| Seed block | V3.4: match wins · pair W/D/L | V5-S | V5-A |
+|---|---|---|---|
+| Development 841–860 | **272/400 · 92/88/20** | **270/400 · 92/86/22** | **272/400 · 92/88/20** |
+| Frozen holdout 901–920 | **260/400 · 92/76/32** | **258/400 · 89/80/31** | **260/400 · 92/76/32** |
+| Combined | **532/800** | **528/800** | **532/800** |
+
+V5-S changed **134 preflop calls→folds in each block**; holdout gained 1 win each vs Tight and `bluffer_high`, lost 2 each vs `rangebot` and Floorfix. The first changed hand outcome improved in 54/72 affected matches, but total net chips across those specific comparisons favored V3.4 by **841 chips**. Example: V5-S vs rangebot's Q♠8♠ fold had **9,877 fewer chips** than V3.4 realized; vs Floorfix Q♥5♠ fold saved **6,663**. These are selected realized results—not causal expected value. Holdout paired bootstrap 95% interval for match win difference **−7 to +3 wins /400**, so the small aggregate difference provides no evidence of superiority.
+
+V5-A estimated a price for **136 potential extra 3bets** but **changed zero live actions**. No 4bet satisfied conservative evidence + stack-risk criteria. Closest situation: pressure opponent had opened **23 of 32** BTN opportunities but only **three** comparable prior reraise responses; 3bet risked **1,164 additional chips**, model EV raise **+87** vs call **+192**, so model chose call. Hence identical match actions and results; not evidence that a broadly aggressive strategy would fail, just no tested positive alteration from this proposal. Avoid relaxing evidence safeguards merely to produce action changes.
+
+**QA:** Codex reports 37 tests passing for V3.4, 41 for V5-S and 42 for V5-A, all official validators passed. **2,490 matches** including independent turbo test, with **zero errors, timeouts or restarts**. Holdout local p95/max latency (ms): V3.4 **18.082/105.371**, V5-S **18.487/124.715**, V5-A **18.268/109.327**. Docker unavailable, so restricted 0.5-CPU/768MB sandbox still unverified. Both experiment patches reconstruct independently from V3.4 and are preserved locally, source SHA manifest verified by Codex per report, not reverified by coordinator.
+
+**Decision and next architectural opportunity:** Released V3.4 `_preflop` currently computes a **single heuristic `_hand_features` score** followed by fixed `value_3bet` / `call_cutoff` and a small `_opponent_history` score offset. It does *not* compute action-specific equity realization or expected value for a credible opponent response distribution on most preflop decisions. Repeated minor score and size changes have not consistently improved against diverse opponents. A **bounded original range/position/stack-aware preflop policy experiment** could address this structural limitation, but must demonstrate meaningful new action changes and real paired improvements without overfitting to `pressure`. Priority: factual diagnosis of preflop money lost by line/position/stack/sizing before implementing a new 169-class preflop lookup/policy; action-specific EV and opponent response risk cannot be asserted from static equity alone. Build new candidate in separate worktree only, maintain strong safeguards, verify rule constraints and use fresh, unused matched seed blocks; do not use 861–880 reserved for Claude acceptance or sealed 1001–1200.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
