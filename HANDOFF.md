@@ -224,14 +224,38 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Deadline gate:** Well before **6:30 PM ET**, the human teammates must put the best vetted bot into public `main` and verify the competition's required submission; do not spend the entire window tuning one toy opponent.
 
+### TASK-CLAUDE-003 — Coordinator review of uploaded local package (November 21, 2026)
+**Status:** Completed locally and reviewed. Human uploaded `TASK-003-package.zip`; contents: hardened `benchmarks/paired_eval.py`, docs and regression tests, plus independently designed `benchmarks/opponents/overfolder/bot.py` and `benchmarks/opponents/trapper/bot.py` and tests/examples. **Package is not the authoritative remote branch**. TASK-002 *is now committed* on `alwaleed/exploit-and-testing` at `1bd9fa6629b50992f4861d4b061b42a8368dd570`; TASK-003 changes remain unpublished on that branch as of review.
+
+**Independent isolated check:** With ZIP contents placed under the correct repo-relative `benchmarks/` paths, ran **45 harness tests (44 passed, 1 live-engine skipped)** and **17 opponent tests passed**, i.e. **61 passed, 1 skipped**. Recomputed uploaded sample digest `bdd1fca3265d79b70eac58b5b65b9134612f4a53cbc6a6a8e2453f2a3d3adcf2` and pair score **2W/1D/0L** across three seeds 101–103 for **overfolder vs Caller**. This sanity sample is *not UO-Monte benchmarking*. Live official engine, validator and Docker were not available in this independent isolated review. Good controls: typed CSV rescore, error exit checking, pair-cluster resampling, sealed seeds guard, clear toy-opponent labels.
+
+**Publication recommendation:** Alwaleed should inspect the exact updated diff against `origin/alwaleed/exploit-and-testing`, rerun the official-kit unit tests and validators, then **approve** a scoped TASK-003 commit and push only on that partner branch. No unconditional Git writes are authorized from this report and no merge to `main` or `feature/strategy`.
+
+### TASK-CLAUDE-004 — Independent exploitation stress benchmark of committed V3.4
+**Assigned to:** Alwaleed / Claude, on `alwaleed/exploit-and-testing`. **Status:** Ready for independent local work; **do not commit, push, merge or modify strategy code without explicit human approval**. **Codex** continues separate **TASK-CODEX-005 / V3.6.1** regression investigation on its isolated worktree. Claude must not edit or rely on uncommitted V3.6.1.
+
+**Goal:** Use the TASK-003 harness and new toy opponents to find *generalizable* exploitation vulnerabilities in the already committed **V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`**, so our primary teammate can prioritize future strategy changes without parallel edits to `bot.py`.
+
+**Instructions:**
+1. Read latest `origin/main:AGENTS.md`, `HANDOFF.md`, and `docs/testing.md`. Inspect local Git status and diff. Coordinate with Alwaleed to obtain permission for TASK-003 commit/push on his branch **separately** if he wants to publish it; don't assume ChatGPT's review alone is human authorization.
+2. Verify TASK-003 patched harness and both opponents run correctly with official `play.py` and `pokercore/validator.py` in the partner's WSL environment. Re-run the two unit-test scripts. Do not modify `pokercore/`.
+3. Fetch `origin/feature/strategy` read-only, then make a **disposable, explicitly labeled isolated copy** of committed `my_bots/uo_monte` V3.4 for benchmarking; do not switch into, merge or write to the primary teammate's working branch. Verify commit SHA `a5ea561` before use.
+4. Run matched seeds in both seat assignments against **overfolder** and **trapper**, initial development seeds **301–320**, fresh holdout **321–340**, clearly separating both blocks. Include a short-stack or blind-structure stress case using only CLI parameters actually supported by official runner; document any unsupported request.
+5. Produce raw wins, **duplicate pair W/D/L**, observed chip outcomes and opponent-specific decision examples (e.g. costly river check-raises, missed steals, trap calls). Report latency only where available and report errors/timeouts/missing results. Use pair-cluster uncertainty and state that the two opponents are caricatures, not a representative tournament field.
+6. Diagnose the **top three tactical weaknesses** exposed by new opponents and propose *tests and interfaces*, not UO-Monte code. Explicitly compare hypotheses with earlier V3.4/V3.5/V3.6 observations in `docs/testing.md`. Do not implement a new UO-Monte version or coordinate simultaneous modifications with Codex.
+7. Return files/commands used, test outcomes, benchmark manifests/digests, seed/seat settings, a prioritized list of observations and an accurate `git status --short`. No Git commit/push, no edit of `main` or shared handoff. Human forwards the concise report for ChatGPT review.
+
+**Release guard:** Keep seeds **1001–1200** untouched for human-approved final sealed testing. The public `main` submission must be updated with the strongest tested bot before **6:30 PM ET** and verified using the organizer's exact submission rules.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
 - [x] V3.3 committed and pushed at `8fe2590`, followed by V3.4 at `a5ea561` (verified remote `feature/strategy` tip). Both changed only the bot and its strategy regression tests.
 - [x] V3.3 local benchmark report reviewed; subsequently committed/pushed at `8fe2590` after human approval.
 - [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
-- [x] TASK-CLAUDE-002 paired-seat harness completed locally; 25 self-tests reported; 6-match sanity check; files and digest reviewed from uploaded artifacts. **Uncommitted/unpushed pending Alwaleed approval.**
-- [ ] TASK-CLAUDE-003 independent harness hardening and overfolder/trapper toy opponents in progress locally; no Git writes authorized.
+- [x] TASK-CLAUDE-002 paired-seat harness published on partner branch at `1bd9fa6`; 25 tests and six-match sanity reported previously.
+- [x] TASK-CLAUDE-003 package reviewed independently: 61 passed, one official-engine test skipped in isolated run, sample digest verified. **TASK-003 code still local/unpushed; partner approval required to publish.**
+- [ ] TASK-CLAUDE-004 V3.4 exploitation stress benchmarks against overfolder and trapper assigned, local analysis only.
 - [x] TASK-CODEX-002 local V3.4 readiness completed; **human approved chronological V3.3/V3.4 checkpoint commits and pushes on `feature/strategy` only; execution pending**. Docker sandbox still untested. No `main` release approval. Claude TASK-CLAUDE-002 continues independently.
 - [x] TASK-CODEX-003 V3.5 local tests complete (43/43 + official validator); **310/400 vs V3.4 310/400 on standard opponents; identical decisions**. 18 extra bets / 15 immediate folds in overfolder diagnostic, but no match-win gain. Preserve local patch; no publication approval.
 - [x] TASK-CODEX-004 V3.6 local comparison complete: 43 tests + validator, 318/400 vs V3.4 316/400, 61/84 vs 56/84 ante/short-stack stress, Aggressive holdout -3. **Uncommitted in isolated worktree.**
