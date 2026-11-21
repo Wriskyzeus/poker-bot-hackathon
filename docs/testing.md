@@ -785,6 +785,25 @@ V5-A estimated a price for **136 potential extra 3bets** but **changed zero live
 **Current coordination:** User expressed frustration at excessive costly Astra Extra High usage for negative large experiments and wants wrapping up rather than endless tasks. Do **not** assign unnecessary new long projects to partner. Any optional final experimental refinement should be **short/stop-early** and focus solely on reducing costly V6-Stab exploratory bets while maintaining positive responses to observed check-fold behavior, only if low-compute diagnostic shows evidence; use narrower early-stage matched-seat trials and stop immediately if no real change/win benefit. Do not assume this will outperform V3.4. The safe tournament submission already on public `main` is valid according to prior validation; no new strategy publication without explicit user approval, source hash verification and official validator before 6:30 PM ET.
 
 
+## Final V6-Stab probe-cost refinement — NO-GO (November 21, 2026)
+
+**Source:** User-submitted screenshot of completed Codex CLI report, task worked 2m32s and finished around 16:50 ET. This is a **small development-only stop-early test**, not an independent holdout result. Coordinator has not obtained or replayed the saved candidate patch/raw logs; the figures below are Codex-reported, while the public GitHub V3.4 blob was checked independently. **Release decision: KEEP V3.4**, source `feature/strategy@a5ea561ff5b70d5a17533579bfc6557b2979622b`, exact released `main` `my_bots/uo_monte/bot.py` Git blob `27acb669ee3ac35172a88293c198182b56db0f78`, 29,397 bytes. Human previously confirmed the organizer form submitted.
+
+**Refinement purpose:** Reduce costly *exploratory* checked-to postflop bets in original V6-Stab, while retaining betting based on observed opponent fold behaviour. One added gate required estimated observed opponent fold probability above **57.1%** at half-pot, considering check's realized value. That is a model-derived candidate threshold, not a universal mathematical truth. Existing V6-Stab code and prior logs were reused. Offline replay estimated that this gate would avoid **22.58BB** losses against `rangebot` and **17.14BB** against `checktrap`, but forgo **60.28BB** against `pressure` and **88.88BB** against `trapper`. Such action-level counterfactuals do not establish end-to-end match EV.
+
+| Development matched-seat cohort | V3.4 | Original V6-Stab | Refined V6-Stab |
+|---|---:|---:|---:|
+| Match wins / 56 (14 opponents, two seats) | **36** | 34 | 35 |
+| Duplicate pair W/D/L (28 pairs) | **10/16/2** | 10/14/4 | 10/15/3 |
+| Exploratory added bets | — | 58 | 39 |
+| Added bets supported by observed fold history | — | 9 | 17 |
+| Added-bet gain vs checking (same-deal replay) | — | +13,064 chips / +109.60BB | +11,580 chips / +101.93BB |
+
+The candidate reduced exploratory bets by **19/58 (~33%)** and recovered one match relative to original V6-Stab, but remained **one match behind V3.4**. `rangebot` additional-bet losses improved **−4.40→−2.20BB** in live development. `pressure` added-bet gain dropped **+40.48→+35.95BB**; `trapper` dropped **+28.60→+11.00BB**. Wins against `rangebot`, `pressure`, `checktrap`, `shifter` were unchanged; the only net match recovery was vs `bluffer_high`. Reported tests: **46 passed**, official validator passed, **56 newly played matches** and **112 reused comparator logs** (same deals/hand IDs), zero errors/timeouts/restarts, local p95 **3.97 ms**, max **29.14ms**. Docker constrained resource sandbox not independently verified.
+
+**Stop decision:** Codex did not run holdout and preserved untouched seeds and patches. The experiment is inconclusive at n=56, but has **no evidenced basis to supplant V3.4**; no further speculative tuning or large runs are warranted for this deadline. Public main verified still V3.4 exact blob. Final practical work: verify public submission, maintain archived candidate research, explain key bot functions to teammates if requested, and avoid unnecessary bot writes. User approval would still be required for any actual code change; no code promotion is recommended. Registration form confirmed submitted by human, receipt not independently viewed. No new Claude tasks needed.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
