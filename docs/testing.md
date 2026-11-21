@@ -832,6 +832,17 @@ On **800 archived matches**, 229 eligible baseline folds, **3 changed actions**;
 **Engineering interpretation:** This uncovered a legitimate *edge-case price calculation* that could be revisited in future work, but is too rare and insufficiently validated to justify a last-minute code replacement before the event. Tournament outcome remains stochastic and no version has demonstrated reliable superiority to V3.4 on broad holdouts. User requested a short technical report and final release; after this NO-GO no further speculative tasks are recommended.
 
 
+## Final V3.4 official Docker sandbox smoke — PASSED (November 21, 2026)
+
+**Source:** Human-provided screenshot of a fresh test in separate detached checkout `/tmp/uo-monte-final-check` based on `origin/main`, distinct from development worktree. The copy had passed `make validate BOT=my_bots/uo_monte` (four official scenarios). Docker Desktop 4.99.0 WSL2 engine became available after enabling Ubuntu integration; using `sudo` to access daemon due current user socket permissions.
+
+**Build:** `sudo make sandbox` executed official `docker build -t fullhouse-sandbox:latest pokercore/sandbox`; terminal showed `[+] Building 55.3s (11/11) FINISHED`, image named `docker.io/library/fullhouse-sandbox:latest`. 
+
+**Official Docker smoke:** From detached main copy `/tmp/uo-monte-final-check`, user ran `sudo ~/projects/poker-bot-hackathon/.venv/bin/python play.py my_bots/uo_monte bots/caller --docker --seed 7`. Terminal printed `uo_monte vs caller: freezeout, blinds standard, stack 10,000, seed 7, Docker sandbox (core 2687febda342c653)`; result **46 hands (one player left)**, **1. uo_monte 20,000 (+10,000), avg think 2 ms; 2. caller 0 (−10,000), avg think 0 ms**. Returned to shell prompt without traceback, and no displayed errors/timeouts/restarts. This **confirms one successful actual containerized freezeout run** against an easy caller. It is not proof that the bot beats stronger opponents or that all worst-case decision timings/resources remain safe across arbitrary games; nevertheless it meaningfully resolves the earlier "Docker unavailable" readiness issue.
+
+**Release remains unchanged:** Protected V3.4 exact Git blob `27acb669ee3ac35172a88293c198182b56db0f78` at public main, form submitted according to user. No strategy code changes, commits, or new versions. The run was a smoke test only and should not be added to prior independent matched-seat benchmarking aggregates.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
