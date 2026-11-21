@@ -81,6 +81,30 @@ done
 - **Verification reported by teammate:** local `make validate BOT=my_bots/uo_monte` passed; seed-7 local freezeout against caller still won after 148 hands. Additional multi-seed benchmarks have **not** been rerun after the safety fix.
 - **Next:** Develop a bounded postflop Monte Carlo equity policy on `feature/strategy`, without rewriting the validated preflop policy. Re-run complete tests before merging.
 
+## Version 2 Monte Carlo benchmark — November 21, 2026
+
+**Source:** report from local Codex CLI run in the user's WSL Ubuntu environment; the underlying match logs were not independently uploaded. The V2 changes are still **local/uncommitted** on `feature/strategy`; the V1.1 reference was isolated from commit `26c0a93`.
+
+Both versions played **seeds 1–20 in both seat orders** against `bots/caller`: 40 freezeout matches each, 10,000 starting chips, standard blind schedule.
+
+| Metric | V1.1 | V2 |
+|---|---:|---:|
+| Seat 1 wins / losses | 11 / 9 | 20 / 0 |
+| Seat 2 wins / losses | 12 / 8 | 20 / 0 |
+| Total wins / matches | 23 / 40 | 40 / 40 |
+| Observed win rate | 57.5% | 100% |
+| Average hands per match | 140.2 | 47.3 |
+| Average match wall time | 0.737 s | 0.786 s |
+| Total benchmark wall time | 29.48 s | 31.43 s |
+| Mean / p95 / max decision time | 0.012 / 0.043 / 0.649 ms | 2.118 / 3.719 / 7.519 ms |
+| Reported errors / decision timeouts / match timeouts | 0 / 0 / 0 | 0 / 0 / 0 |
+
+- **Validation:** 14 unit tests and all 4 organizer validator scenarios passed. V2 also won seed-7 smoke match after 46 hands.
+- **Caveat:** Caller never bet postflop. These results confirm V2's value-betting effectiveness versus a passive caller; they **do not** test folding/calling/raising against postflop bets, or quantify its strength against competent agents.
+- **Compute caveat:** The measured local maximum of 7.519 ms is far under the 2,000 ms deadline, but official sandbox (0.5 CPU, 768 MB) timing should still be verified.
+- **Release decision:** Use V2 as the experimental development baseline. Retain V1.1 commit `26c0a93` and a stable `main` until V2 beats an opponent that bets and raises postflop and meets sandbox constraints.
+- **Next:** Implement test-only postflop aggressive, tight and randomized benchmark opponents outside the collected `my_bots/uo_monte/` folder; evaluate repeated seeded matches with swapped seats, collect logs and inspect costly misplays. Do not modify `pokercore/` or merge into `main` prematurely.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
