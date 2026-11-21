@@ -12,9 +12,9 @@
 
 ## Current branches and safe checkpoints
 - `main`: public submission branch. **The final validated strategy has not yet been promoted to main.** Shared documentation updates here are NOT a final submission.
-- `feature/strategy`: last verified committed bot **V3.2** at `cfab27c26222423b46b7293c6416785c7115369e` (`my_bots/uo_monte/bot.py`, `tests/test_uo_monte_bot.py`). Earlier baselines **V3.1** `c12396e` and **V2** `ef760ca` remain in history.
+- `feature/strategy`: last verified committed bot **V3.4** at `a5ea561ff5b70d5a17533579bfc6557b2979622b` (`my_bots/uo_monte/bot.py`, `tests/test_uo_monte_bot.py`). Recoverable earlier baselines: **V3.3** `8fe2590`, **V3.2** `cfab27c`, **V3.1** `c12396e`, **V2** `ef760ca`.
 - `alwaleed/exploit-and-testing`: partner's independent branch; its shared notes were incorporated into `main` for coordination. Do not merge it wholesale or overwrite teammate work.
-- **V3.3 adaptive aggression:** tested locally, **32 unit tests** and official validator passed; currently uncommitted, with Codex reporting a local snapshot/patch. 
+- **V3.3 adaptive aggression:** tested with 32 unit tests, official validator passed, committed/pushed as `8fe2590` prior to V3.4. 
 - **V3.4 free-river value bets:** committed and pushed as `a5ea561` on `feature/strategy`; baseline for subsequent work.
 - **V3.5 fold equity:** Codex reports **43 passing unit tests**, official validator, and 800 standard-opponent matches with identical decisions and **310/400 wins** for both V3.4 and V3.5 on new seeds 61–100. Against an artificial overfolder, V3.5 made 18 extra bets and induced 15 folds but did not gain match wins. **Local uncommitted experimental patch; not adopted.**
 
@@ -40,8 +40,8 @@ V3.2 passed **29 unit tests** and the official validator at its saved checkpoint
 | Shared project decisions and documentation task queue | ChatGPT coordinator, subject to human approval | `main`, documentation only |
 | Tournament submission and release authorization | Human teammates | Public `main` after tests |
 
-## Verified interfaces in committed V3.2
-These reflect the current *committed* `feature/strategy` bot, not proposed code:
+## Verified interfaces first established by V3.2
+These interfaces originated in V3.2 and are used by committed V3.4, although later versions added additional behavior:
 - `decide(game_state: dict) -> dict`: engine contract. Returns `{"action":"fold"|"check"|"call"|"all_in"}` or `{"action":"raise","amount":total_street_bet}`.
 - `_hand_features(cards)`: six-tuple `(score, pair, suited, connected, high, low)`; score is a heuristic preflop bucket, not equity.
 - `_respond(action, state)`: translates intended policy action or total-street raise target into legal response.
@@ -247,6 +247,27 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Release guard:** Keep seeds **1001–1200** untouched for human-approved final sealed testing. The public `main` submission must be updated with the strongest tested bot before **6:30 PM ET** and verified using the organizer's exact submission rules.
 
+### Coordinator review — TASK-CODEX-005 / V3.6.1 (November 21, 2026)
+**Completed local tests; no promotion:** Codex diagnosed V3.6's specific **deep button versus three-bet** risk and built a conservative opponent-three-bet-range / weak offsuit playability adjustment, changing *only deep button defense*, retaining V3.6 short-stack and V3.4 postflop code. The version is **uncommitted in an isolated worktree**; V3.6 and V3.5 recovery patches preserved.
+
+**Fresh seed comparison, order V3.4 / V3.6 / V3.6.1:** development 241–260 raw wins out of 200 **160 / 163 / 164**, duplicate pair W/D/L **63/34/3 · 65/33/2 · 66/32/2**; holdout 261–280 raw wins **155 / 153 / 154**, pair W/D/L **59/37/4 · 57/39/4 · 59/36/5**. Combined 400-match wins **315 / 316 / 318**. Aggressive fresh holdout **30 / 29 / 28** wins / 40; Mixed fresh holdout **31 / 29 / 28**. Older regression seeds 201–240 raw wins **316 / 318 / 323** but are not new holdout evidence. Separately, 3.5/7.5/12BB stress **48/64 / 45/64 / 45/64**—the earlier small-sample V3.6 stress gain **did not replicate**. Fresh preflop all-in showdown chip losses **266,635 / 93,723 / 113,757**, but gross losses across all showdowns **2,846,140 / 2,909,979 / 2,901,683**. Tests **37/43/47** passed and all three passed the official validator; **1,792** newly run matches, zero errors/timeouts/restarts per Codex report; official restricted Docker sandbox still unverified. Full breakdown in `docs/testing.md`. **Decision: V3.4 remains the protected release candidate.** Do not promote V3.6.1 based on fitted regression seeds.
+
+**Current partner status:** `alwaleed/exploit-and-testing` now at `421b70e68d6e3c698d557fcf53359f93129d3c21`, with commit message **"Harden paired harness; add overfolder and trapper practice opponents (TASK-CLAUDE-003)"**. Claude TASK-CLAUDE-004 may independently run exploit benchmarks; no strategy ownership transfers.
+
+### TASK-CODEX-006 — V3.7 evidence-driven flop/turn value and bluff policy
+**Assigned:** Primary teammate / Codex CLI. **Status:** authorized for *local isolated research, coding and testing only*; no commits/pushes/merges without human approval. Claude TASK-CLAUDE-004 remains independent. **Rationale:** Three preflop variants have only tiny, inconsistent effects on fresh aggregate match wins; V3.4's **flop/turn free-check policy defaults to check below random-hand equity 0.72** and prior V3.5 semi-bluffs did not trigger against standard practice opponents. This is a potential strategic bottleneck, not proven. Focus on **generalizable postflop decision quality**, not optimizing to one toy opponent.
+
+1. **Preservation:** Start new **isolated worktree** from protected remote `feature/strategy` **V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b`**. Do not reset/overwrite the existing V3.6.1 worktree or the original V3.5/V3.6 recovery patches. Ensure a reproducible baseline and track diffs. No edits to `main`, `HANDOFF.md`, `docs/testing.md`, `pokercore/` or the partner's branch.
+2. **Diagnose before coding:** Extract decision-level opportunity counts in matched V3.4 logs for flop and turn: free-check spots, value-bet opportunities, made hand/draw categories, opponent bet responses/fold frequencies, SPR, pot odds, initiative and position. Find examples where checking sacrifices value/protection, or a bet is likely negative EV; distinguish inference from observed counterfactual EV. Correct the previously discovered **wrong denominator** pitfall.
+3. **One bounded V3.7 idea:** Implement a **measured** flop/turn no-owed policy using board texture, made-hand strength/draws, stack-to-pot ratio, position, legal total-street raise semantics, and *sufficiently sampled* opponent responses. Consider thin value bets, protection bets, and very selective semi-bluffs **only if verified opportunity data supports them**. Avoid fake confidence from Monte Carlo against a random opponent hand; don't open over-aggressive or overfit historical seeds. Keep `_respond` legality, river code, preflop, and large-pot commitment logic unchanged unless directly necessary for correctness. Prefer fewer, explainable changes.
+4. **Explicit regression tests:** Include check-is-free and facing-bet spot tests, 0 stack/short stack, antes and blinds, dry/wet boards, strong made hands and draws, repeated aggression, valid `raise amount` targets, and no forbidden imports/side effects. Run Python 3.10 tests and official validator; use Docker sandbox if available (report limitations otherwise).
+5. **Benchmark with paired seats and identical deals:** V3.4 vs V3.7 on fresh dev seeds **401–420** and held-out **421–440** versus Caller, Aggressive, Tight, Mixed (rising blinds) and Floorfix (flat 50/100), each 20 seeds x 2 seats x 5 opponents. Report raw wins, duplicate-pair W/D/L, chip-risk/shown-down metrics, counts of actual changed actions/opportunities, timing p95/max and any failures. Do not touch sealed **1001–1200**. Use separate holdout only after implementation is frozen; if revised due to holdout, declare it development and select another untouched holdout.
+6. **Independent opponents:** Read-only fetch the published `alwaleed/exploit-and-testing` TASK-003 overfolder and trapper if compatible with local runner, benchmark as **supplementary diagnostic cases**, not the sole optimization targets; do not edit or merge that branch or ask Claude to change it. Keep their seeds/results distinct from core comparison. If unavailable, report that; Claude TASK-004 handles independent stress QA.
+7. **Stopping rule:** If a proposed policy changes almost no hands like V3.5, does not outperform V3.4 on fresh holdout, or degrades Aggressive/Mixed by multiple matches, **do not adopt it**. Preserve experiment as snapshot/patch and report null result. If promising, return a candidate comparison and recommended next validation without committing. Include *specific representative action traces*, not just final W/L.
+8. **Release readiness:** By **5:30 PM America/Toronto**, stop unconstrained research and coordinate an approved, exact final candidate into public `main`; verify organizer's required submission path, test validator, and use reserved sealed seeds once for final unbiased evaluation if timing allows. Do not wait for Claude's TASK-004 if it is delayed; don't jeopardize the 6:30 PM deadline. The human retains release authority.
+
+**Deliverables:** Full results, commands, seed lists, local Git status, source diff/patch, validator and unit-test outcomes, example action changes, and recommendation whether **committed V3.4** or local V3.7 is stronger. No automatic Git publication.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -255,11 +276,12 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 - [x] TASK-CLAUDE-001 report supplied as DOCX and reviewed; findings above.
 - [x] TASK-CLAUDE-002 paired-seat harness published on partner branch at `1bd9fa6`; 25 tests and six-match sanity reported previously.
 - [x] TASK-CLAUDE-003 package reviewed independently: 61 passed, one official-engine test skipped in isolated run, sample digest verified. **TASK-003 code still local/unpushed; partner approval required to publish.**
-- [ ] TASK-CLAUDE-004 V3.4 exploitation stress benchmarks against overfolder and trapper assigned, local analysis only.
+- [ ] TASK-CLAUDE-004 V3.4 exploitation stress benchmarks against overfolder and trapper assigned, local analysis only; **TASK-CLAUDE-003 published on partner branch at `421b70e`**.
 - [x] TASK-CODEX-002 local V3.4 readiness completed; **human approved chronological V3.3/V3.4 checkpoint commits and pushes on `feature/strategy` only; execution pending**. Docker sandbox still untested. No `main` release approval. Claude TASK-CLAUDE-002 continues independently.
 - [x] TASK-CODEX-003 V3.5 local tests complete (43/43 + official validator); **310/400 vs V3.4 310/400 on standard opponents; identical decisions**. 18 extra bets / 15 immediate folds in overfolder diagnostic, but no match-win gain. Preserve local patch; no publication approval.
 - [x] TASK-CODEX-004 V3.6 local comparison complete: 43 tests + validator, 318/400 vs V3.4 316/400, 61/84 vs 56/84 ante/short-stack stress, Aggressive holdout -3. **Uncommitted in isolated worktree.**
-- [ ] TASK-CODEX-005 V3.6.1 regression analysis and conditional refinement assigned locally, no Git publication approval.
+- [x] TASK-CODEX-005 V3.6.1 completed locally: fresh holdout 154/200 vs V3.4 155/200; short-stack stress 45/64 vs V3.4 48/64; **not adopted**. V3.4 remains release candidate.
+- [ ] TASK-CODEX-006 V3.7 bounded flop/turn policy and fresh matched-seat benchmarking, local-only and no Git publication approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
