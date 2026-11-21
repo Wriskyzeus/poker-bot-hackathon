@@ -147,6 +147,35 @@ Reported **V2 decision p95 ~3.682 ms and maximum ~7.278 ms across 9,126 decision
 
 **Next checkpoint:** Develop independently implemented V3 opponent-aware calling and stack-commitment logic, keep V2 as rollback, test against Tight/Mixed/Aggressive/Caller and Floorfix where appropriate, and retest official rising-blind format separately. Freeze, validate and push tested submission to public `main` before the team-reported 6:30 PM ET deadline.
 
+## Version 3.1 opponent-aware river defense — November 21, 2026
+
+**Source:** User-supplied Codex CLI screenshots. V3.1 implemented and benchmarked locally on `feature/strategy` but **not yet committed or pushed** at report time. V2 remains preserved at `ef760ca5bf14b367feac9accb3f4b3fbeb478181`.
+
+New logic, only when facing a river bet: enumerate the **990** legal opponent hole-card combinations given 7 known cards, then weight holdings using public street/bet-size/action history and conservative priors. Preserve preflop, flop, turn and free-check river decisions. Use contestable pot odds when determining calling vs folding and allow raises only with stronger evidence against an opponent's range.
+
+Codex reports **20 unit tests**, all **4 validator scenarios**, and **400 head-to-head local matches** completed; zero errors, timeouts or restarts.
+
+| Opponent | Blinds | V2 wins / 40 | V3.1 wins / 40 |
+|---|---|---:|---:|
+| Caller | Rising | 40 | 40 |
+| Aggressive | Rising | 37 | 34 |
+| Tight | Rising | 22 | 26 |
+| Mixed | Rising | 20 | 22 |
+| External Floorfix | Flat 50/100 | 23 | 26 |
+| **Total** | Mixed by opponent | **142 / 200** | **148 / 200** |
+
+Timing reported: V3.1 overall decision p95 **4.362 ms**, max **9.243 ms**. For river decisions facing a bet, p95 dropped from **4.918 ms** to **0.537 ms**. Official half-core Docker sandbox timing remains to be verified.
+
+**River-specific results (V2 → V3.1):**
+- Aggressive: losing terminal calls **24/62 → 16/45**; relative-to-folding net **+179,416 → +181,679** chips, but paired live changes folded too often in some high-pressure spots and cost 3 match wins.
+- Tight: **20/20 → 2/2** losing calls, relative net **−36,645 → −4,770**.
+- Mixed: **84/116 → 24/49** losing calls, relative net **+10,549 → +73,917**.
+- Floorfix: **43/46 → 9/22** losing calls, relative net **−50,509 → +29,623**; replay of exact V2 decisions suggested **52,069** chips saved at those decisions, but live-match effects differ.
+
+**Critical unresolved weakness:** one-pair escalation on flop/turn. Codex reports V3.1 still lost **9,830 chips** by repeatedly reraising top pair into Floorfix's top set. Next focused task: V3.2 stack-commitment and reraising policy, retaining improved V3.1 river decisions and legal action safety. Measure regressions against Aggressive and all other benchmark opponents; do not overfit to a single match.
+
+**Evaluation caution:** 148/200 versus 142/200 is a modest observed gain across heterogeneous opponents and not a robust statistical claim. These are homemade opponents plus a 6-max-derived external opponent under flat blinds, not an actual tournament field. Do not merge onto public `main` before release freeze, official validator and sandbox tests.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
