@@ -530,6 +530,32 @@ Using exact pinned upstream SHAs from the report, independently opened repositor
 **Coordinator decision:** **Keep committed V3.4 as protected release candidate.** V4 showed technically sound match-local memory and legally obtained public-game observations, but its action policy **did not improve frozen holdout wins** and worsened two other metrics. Preserve V4 memory tracker and EV code as a recoverable experiment, **not** as automatically deployable bot strategy. Next priority is a narrow **counterfactual EV calibration / ablation** across V3.4, V4 and V4-with-raises-disabled, testing delayed adaptation and rejecting uncalibrated raise decisions, followed by truly independent bluff-capable opponents from Claude TASK-006. Verify competitor legality and prevent an unapproved release. At **5:30 PM ET**, prioritize approved public `main` deployment of the best validated candidate; hard cutoff reported **6:30 PM ET**.
 
 
+## TASK-CODEX-008 — V4 no-extra-raises ablation and V3.4 release dry-run (November 21, 2026)
+
+**Evidence/provenance:** user-supplied screenshot of Codex CLI completion report. Coordinator has **not independently rerun** the 1,200 matches or inspected the local source/patch. **V3.4 remains the recommended release candidate**; V4 and V4-no-extra-raises are local uncommitted worktree experiments. Protected remote strategy checkpoint `feature/strategy` is `a5ea561ff5b70d5a17533579bfc6557b2979622b`.
+
+**Raise-EV fault analysis:** On the original V4 audit, the **74 defensive changes** included **19 calls converted to raises**. Opponents **called 14 and reraised five**; V4 called **all five reraises**, whose effective call price was missing from its raise-EV branch model (it combined all non-folds). **18 of those 19 raises** occurred against Floorfix, with only **zero–three previous comparable opponent responses** informing each decision. The offline correction models opponent fold/call/reraise separately, caps the contested pot/contestable chips and checks minimum total-street raise legality. Against Floorfix seed 495, an additional raise of **1,755** induced a reraise costing **2,916** additional chips to call; the hand eventually lost **9,882 net chips**. These are observed outcomes, not a comparison of what a counterfactual baseline call would have earned. **No new V4.1 policy was shipped**: calibration of live reraises was too sparse. Instead Codex tested an isolated V4-no-extra-raises ablation, which retains the cumulative match-local tracker and fold/call changes but disables its new call→raise overrides.
+
+**Fresh matched-seat results (V3.4 / V4 / V4-no-extra-raises), each row wins out of 40:**
+
+| Opponent | Development 681–700 | Frozen holdout 701–720 |
+|---|---:|---:|
+| Caller (rising) | 40 / 40 / 40 | 40 / 40 / 40 |
+| Aggressive (rising) | 29 / 29 / 29 | 32 / 32 / 32 |
+| Tight (rising) | 29 / 29 / 29 | 30 / 30 / 30 |
+| Mixed (rising) | 22 / 23 / 23 | 21 / 22 / 22 |
+| Floorfix (flat 50/100) | 33 / 33 / 33 | 28 / 29 / 29 |
+| **Raw match wins/200** | **153 / 154 / 154** | **151 / 153 / 153** |
+| **Duplicate-pair W/D/L per 100** | **56/41/3 · 56/42/2 · 56/42/2** | **56/39/5 · 57/39/4 · 57/39/4** |
+
+**Combined 400 matches/version:** V3.4 **304**, V4 **307**, V4-no-extra-raises **307** wins; pair outcomes V3.4 **112W/80D/8L**, both V4 variants **113W/81D/6L**. **Full V4 and no-extra-raises made identical match outcomes and duplicate-pair records**, despite different actions; this is too small to show reliable strategy superiority. Cumulative gross showdown losses: **2,937,312 / 2,910,626 / 2,907,396 chips** (observed gross losses not necessarily EV). Full V4 changed **85 defensive actions** in the fresh data (**73 after hand 60**); no-extra-raises changed **63** (**51 after hand 60**), adding **zero new raises**.
+
+**Validation:** All **1,200 matches** reported completed without errors, timeouts or restarts. Python tests: **37 V3.4**, **45 V4**, **45 V4-no-extra-raises** passing. Offline EV audit **7** passing tests. All three passed official validator. Local p95/max latency, in ms, development **2.982/32.082 · 3.395/25.225 · 3.386/25.720**; holdout **2.984/30.903 · 3.354/25.184 · 3.328/33.940**. Restricted Docker sandbox not tested (WSL lacks Docker); sealed seeds **1001–1200** unused. Newest results do not overrule older V4 poor performance; V3.4 remains the best validated fallback.
+
+**Release dry-run, still NOT deployed:** Codex prepared a minimal patch to public `main` consisting of `my_bots/uo_monte/bot.py` plus `tests/test_uo_monte_bot.py` copied exactly from `a5ea561`. It reports 37 passing tests, official validator passed, and a **44-hand standard Caller smoke match** won without errors. The committed V3.4 tournament `bot.py` Git blob SHA is **`27acb669ee3ac35172a88293c198182b56db0f78`**. Public repo status reported public, default branch main. Exact team folder `uo_monte`. Registration form completion **unverified**. Docker unavailable, so constrained sandbox safety **not verified**. No Git strategy release or commit/push performed. **Coordinator independently checked public `main:my_bots/uo_monte/bot.py` is still the 3,055-byte organizer starter template (blob SHA `05ddd291004fac5800d9e0bcba240629c18cd5be`) at review.**
+
+**Important release gate:** Human teammates should **explicitly authorize** promotion of verified committed V3.4 to public `main` now or before the 5:30 PM readiness gate, verify the new public blob SHA/commit, `uo_monte` identity and submission form by the 6:30 PM ET deadline. This is independent of ongoing experiments. **Do not automatically publish without human approval.** Claude TASK-006 is separately building bluff-capable adversarial practice opponents. Future experimentation should be targeted to **stronger opponent diversity** and genuinely high-leverage changes, not simply another small generic threshold shift.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
