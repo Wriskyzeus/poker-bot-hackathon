@@ -20,6 +20,13 @@ Build an independently developed bot for **heads-up No-Limit Texas Hold'em**, im
 
 The organizers verbally approved studying public open-source poker bots, using them as **offline practice opponents**, properly licensed research, pretrained models/tables, and AI coding assistance. They **do not permit simply copying another finalist's bot** as the UO-Monte submission.
 
+## Third-party licensing and tournament compliance gate
+- Publicly visible or labeled "open source" does **not** automatically mean we may copy code or datasets. For **each** imported file, pretrained model, chart or generated-table source, verify the exact repository/file commit, copyright owner, license text, dependent licenses, data provenance and any restrictions. Do **not** copy unknown-license material, unlicensed charts, AGPL code without clearance, or another finalist's bot.
+- When using MIT-licensed portions, preserve the required copyright notice and license permission text. Keep a transparent provenance and attribution register outside submitted files, and provide any required notices with distributed materials. Researching high-level CFR ideas is not the same as copying implementation.
+- The published starter-kit rules do **not** expressly authorize every kind of third-party source incorporation. The humans report a **verbal organizer clarification** permitting properly licensed open-source adaptation and pretrained data tables; if any specific use remains ambiguous, seek organizer confirmation *before inclusion* and otherwise use the source as research only.
+- External solver executables, Rust/C++ binaries, downloads, networking and training are only permitted **offline during development**, not in submitted `decide()`. Any deployed table must comply with allowed Python imports, read-only import-time data loading, file limits and 2-second / 0.5 CPU sandbox.
+- Consult `docs/open-source-strategy-research.md` for audited source status. Confirm exact candidate diff/source rights before human-approved integration. **Do not assume source publication on GitHub supplies permission.**
+
 ## Ownership and concurrency
 - **Core bot and integration:** The primary teammate's local Codex CLI on `feature/strategy` owns `my_bots/uo_monte/bot.py`, preflop, Monte Carlo equity, postflop policy, integration, and its regression tests.
 - **Independent QA/research/testing:** Alwaleed and Claude work in `alwaleed/exploit-and-testing` on opponent-statistics proposals, benchmark harnesses and practice opponents. For the initial assignment, Claude is **read-only** until explicit approval.
