@@ -804,6 +804,25 @@ The candidate reduced exploratory bets by **19/58 (~33%)** and recovered one mat
 **Stop decision:** Codex did not run holdout and preserved untouched seeds and patches. The experiment is inconclusive at n=56, but has **no evidenced basis to supplant V3.4**; no further speculative tuning or large runs are warranted for this deadline. Public main verified still V3.4 exact blob. Final practical work: verify public submission, maintain archived candidate research, explain key bot functions to teammates if requested, and avoid unnecessary bot writes. User approval would still be required for any actual code change; no code promotion is recommended. Registration form confirmed submitted by human, receipt not independently viewed. No new Claude tasks needed.
 
 
+## V6-Protection final experiment — NO-GO / V3.4 final release (November 21, 2026, Codex completed ~17:03 ET)
+
+**Source and verification:** Human provided a screenshot of Codex CLI's final V6-Protection result, based on saved development and frozen holdout logs. Coordinator did **not independently replay raw match logs** or candidate source patch (stored only in Codex local worktree). No previous match reruns were needed. Public GitHub `main` independently checked and **exact `my_bots/uo_monte/bot.py` matches V3.4** (`feature/strategy@a5ea561ff5b70d5a17533579bfc6557b2979622b`, blob `27acb669ee3ac35172a88293c198182b56db0f78`, 29,397 bytes). **Release decision: NO-GO V6-Protection; KEEP V3.4 on public main**. No git code commit, push or merge occurred. User has confirmed registration submitted.
+
+**Hypothesis and experiment:** V3.4's default flop/turn no-bet policy typically bets only at estimated equity >=0.72. V6-Protection explored value/protection betting with more moderate made hands/draws rather than pure-air exploratory stabs. Both versions were evaluated on identical seed/seat hands, verified canonical hand IDs, and stopped after enough holdout evidence to assess the experiment.
+
+| Benchmark | V3.4 | V6-Protection |
+|---|---:|---:|
+| Development (9 opponents, 72 matches) | **43/72 wins**, duplicate pairs **14W/15D/7L** | **45/72 wins**, **16W/13D/7L** |
+| Frozen holdout (9 opponents, 108 matches) | **63/108 wins**, **20W/23D/11L** | **60/108 wins**, **21W/18D/15L** |
+| Holdout cumulative full-match BB/hand | **+0.241** | **+0.216** |
+
+**Holdout by opponent V3.4→candidate (matches, six pairs except Caller has six pairs / 12 matches):** Pressure **5→7**; Rangebot **4→4**; Aggressive **10→10**; Mixed **9→6**; Tight **8→8**; Caller **12→12**; Trapper **9→8**; Bluffer High **4→2**; Bluffer Mid **2→3**. Total **63→60**. The candidate added **231 flop/turn bets** in holdout and same-deal first-divergence bet-versus-check replays showed **+66.25BB** in those newly bet hands; however this narrow comparison does **not** represent the downstream match changes. Full-match BB/hand worsened, demonstrating why realized added-bet gains alone are not a sufficient release criterion. Selected Mixed hand on seed 1250: new bet of 176 with K♠8♣ on 8♥7♦2♦ induced a fold and immediately won 220 chips, while V3.4 checking the identical deal eventually won 5,375 chips; estimated **51.55BB** lost by forgoing future value. Other opponents' call/raise responses likewise change downstream payoffs.
+
+**Safety and deployment:** Codex reported official validator **PASSED** for both variants, **37 V3.4 / 42 candidate unit tests** passed, **360 total matches** with no errors/timeouts/restarts. Holdout decision timing candidate p95/max **9.71 / 57.35 ms**, V3.4 **9.57 / 71.17 ms**, local host measurements, **not** an official 0.5CPU/768MB Docker sandbox run. All experimental patches, raw logs and checksums were preserved locally. No candidate publication. No further strategy experiments recommended for the present deadline.
+
+**FINAL release gate:** The public repository `Wriskyzeus/poker-bot-hackathon` is public, default `main`, exact submitted path `my_bots/uo_monte/bot.py`, source verified byte-for-byte against validated V3.4. Current code imports only `random`, `bisect`, `itertools`, `eval7`, contains correct `decide(game_state)` entry point, and targeted static audit found no network/subprocess/threading/file-write imports. Previous official validator and many local matches passed. **Restricted sandbox Docker test remains unverified**, and judge-side acceptance cannot be guaranteed until organizers run it. User confirmed Google form submitted, actual receipt not separately checked. Any hypothetical new release would require explicit human approval and renewed final validation before actual 6:30 PM ET cutoff, but none is justified by evidence.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
