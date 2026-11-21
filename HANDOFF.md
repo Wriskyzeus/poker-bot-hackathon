@@ -15,7 +15,8 @@
 - `feature/strategy`: last verified committed bot **V3.2** at `cfab27c26222423b46b7293c6416785c7115369e` (`my_bots/uo_monte/bot.py`, `tests/test_uo_monte_bot.py`). Earlier baselines **V3.1** `c12396e` and **V2** `ef760ca` remain in history.
 - `alwaleed/exploit-and-testing`: partner's independent branch; its shared notes were incorporated into `main` for coordination. Do not merge it wholesale or overwrite teammate work.
 - **V3.3 adaptive aggression:** tested locally, **32 unit tests** and official validator passed; currently uncommitted, with Codex reporting a local snapshot/patch. 
-- **V3.4 free-river value bets:** tested locally with **37 unit tests**, official validator, and **800 match runs** comparing V3.3 with V3.4. V3.4 scored **323/400** vs **320/400** for V3.3 (development seeds 1–20 plus fresh holdout 41–60), with a reported 39% reduction in combined check-raise losses but fewer realized in-position river value-bet chips. **Not yet committed or pushed.** V3.2 at `cfab27c` remains the known-good committed fallback.
+- **V3.4 free-river value bets:** committed and pushed as `a5ea561` on `feature/strategy`; baseline for subsequent work.
+- **V3.5 fold equity:** Codex reports **43 passing unit tests**, official validator, and 800 standard-opponent matches with identical decisions and **310/400 wins** for both V3.4 and V3.5 on new seeds 61–100. Against an artificial overfolder, V3.5 made 18 extra bets and induced 15 folds but did not gain match wins. **Local uncommitted experimental patch; not adopted.**
 
 ## Recent benchmark evidence
 Local matched-seed comparisons, 20 seeds × two starting seats per opponent (40 matches per version per opponent). Floorfix used **fixed 50/100 blinds**, and the custom opponents used **rising blinds**; the benchmark pool is not a representation of the true finalist field.
@@ -181,6 +182,31 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 **Required final report:** paths changed; unit tests and validator outputs; sample paired result; manifest/digest; how the CSV parsing, process exit, and confidence-interval issues were handled; limitations; `git status --short`; proposed integration instructions for the primary teammate. Stop before any commit/push and await approval.
 
+### TASK-CODEX-004 — V3.6 heads-up preflop and short-stack optimization (parallel with Claude TASK-003)
+**Assigned to:** Primary teammate's local Codex CLI. **Status:** Local research/implementation/testing authorized; **no Git commits/pushes/merges until human approval**. Claude continues independent QA and benchmark opponents on `alwaleed/exploit-and-testing`. No shared strategy-file edits.
+
+**Rationale:** V3.5 changed no action in 400 standard-opponent matches and is **not** accepted as a release upgrade. Existing committed V3.4 `a5ea561ff5b70d5a17533579bfc6557b2979622b` remains the stronger proven fallback. The V3.4 `_preflop(state)` still uses broad heuristic hand scores and fixed thresholds, including the <=8 big-blind shove/fold branch; that suggests a testable leak when effective stacks, antes and 3-bet pressure vary. This is not a claim that a specific new policy is stronger.
+
+**Safe workflow:** Do not discard V3.5's **local/uncommitted** `bot.py` and tests. Preserve exact copies and a reproducible diff outside the repo and verify byte hashes. Prefer a *separate clean temporary Git worktree* at committed V3.4 for V3.6 experiments so the V3.5 workspace remains intact; do not use `git reset --hard`, `git clean`, force-push, or merge. Confirm the local interpreter and official testing commands work there.
+
+**Phase A — Quantify leaks before coding**
+1. Audit `_preflop`, `_hand_features`, legal raise-to semantics, position/button, blinds/antes, effective stacks and opponent raise history. Identify likely mistakes or exploitable patterns from existing logged hands; distinguish documented evidence from assumptions.
+2. Review short-stack push/fold and 3-bet defense for <=4BB, 4–8BB, 8–15BB, and deep-stack cases. Look at *effective* rather than just hero stack depth and the actual price when facing a raise.
+3. Produce a small, explainable change hypothesis; if no credible leak is identified, return a diagnosis instead of gratuitously changing strategy.
+
+**Phase B — Scoped V3.6 implementation (only if justified)**
+1. Improve preflop choices (open/limp, raise sizing, call/3-bet, re-raise, shove/fold) where measured weaknesses exist; use poker ranges/equity/stack economics, not fragile opponent names or seed-specific logic.
+2. Preserve V3.4's postflop river and stack-off policies, action legality, existing runtime limits; do not implement V3.5 semi-bluff code as an assumed improvement.
+3. Add focused tests for legality, total-street raising, short-stack actions, rising blinds/antes, button order, min raises, and preflop decision regressions. Avoid restricted API/dependencies.
+
+**Phase C — Paired benchmarking and safety**
+1. Run full unit tests, all four official validator scenarios, rising-blind/ante/forced-all-in smoke matches and local latency checks.
+2. Compare exact committed V3.4 vs the local V3.6 candidate on seeds **201–220 (development)** and **221–240 (holdout)**, two seats per seed, against Caller, Aggressive, Tight, Mixed, and external Floorfix (Floorfix's flat blinds must be clearly labelled). Also test short-stack-specific cases that the default freezeout might rarely generate.
+3. Report both raw match wins and *paired-seat* W/D/L, per-opponent regressions, showdown losses, timeouts and p95/max timing; never claim a small observed gain proves general superiority. Do **not** use sealed seeds 1001–1200.
+4. Stop and report; do **not commit or push** V3.6, update `main`, change `pokercore/`, edit partner's branch or handoff files. V3.5 remains a separately preserved experimental patch for possible later use after Claude's new opponent tests.
+
+**Release reminder:** This remains local experimentation. Public `main` still contains the starter template; the human team must place a tested, validated bot on `main` in a controlled release prior to **6:30 PM ET** and verify the actual competition submission procedure. Restricted Docker tests remain unavailable locally.
+
 ## Status
 - [x] `AGENTS.md`, `CLAUDE.md`, `HANDOFF.md` reviewed and published to shared `main` as docs-only coordination.
 - [x] V3.2 verified pushed to `feature/strategy` at `cfab27c`.
@@ -190,7 +216,8 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 - [x] TASK-CLAUDE-002 paired-seat harness completed locally; 25 self-tests reported; 6-match sanity check; files and digest reviewed from uploaded artifacts. **Uncommitted/unpushed pending Alwaleed approval.**
 - [ ] TASK-CLAUDE-003 independent harness hardening and overfolder/trapper toy opponents in progress locally; no Git writes authorized.
 - [x] TASK-CODEX-002 local V3.4 readiness completed; **human approved chronological V3.3/V3.4 checkpoint commits and pushes on `feature/strategy` only; execution pending**. Docker sandbox still untested. No `main` release approval. Claude TASK-CLAUDE-002 continues independently.
-- [ ] TASK-CODEX-003 V3.5 fold-equity local implementation/benchmarks awaiting results; no publication approval.
+- [x] TASK-CODEX-003 V3.5 local tests complete (43/43 + official validator); **310/400 vs V3.4 310/400 on standard opponents; identical decisions**. 18 extra bets / 15 immediate folds in overfolder diagnostic, but no match-win gain. Preserve local patch; no publication approval.
+- [ ] TASK-CODEX-004 local V3.6 preflop/short-stack investigation and tests assigned; no Git publication approval.
 - [ ] Final release approved by both teammates, official sandbox validated and final `main` commit verified.
 
 ## Open questions and decisions
@@ -209,9 +236,9 @@ Qualification pairing: **24 fresh pairings** yielded V3.4 **17W/5D/2L**; prior d
 
 ## Development roadmap (provisional, updated November 21, 2026)
 
-- **V3.5:** selective flop/turn semi-bluffs and fold-equity exploitation, local task above.
-- **V3.6:** integrate vetted opponent-opportunity statistics from Claude's QA after its harness task is reviewed. No duplicate modeling code or unconditional integration.
-- **V3.7:** heads-up preflop / 3-bet / short-stack decisions as blinds and antes rise. Assess before implementing.
+- **V3.5:** completed exploratory semi-bluff experiment; no observed match-win gain on standard field, preserve as local patch.
+- **V3.6:** moved up heads-up preflop / 3-bet / short-stack analysis and scoped optimization to avoid waiting for Claude's independent opponent work.
+- **V3.7:** potential integration of vetted opponent-opportunity statistics from Claude's QA after its task-003 harness/opponents are reviewed. No duplicate modeling code or unconditional integration.
 - **V4:** diverse opponents, pair-level tournament scoring, Docker/sandbox if available, latency and safety validation, freeze and deploy strongest candidate to `main`.
 
 The team intends to prioritize development rather than a lengthy presentation session, but must leave a practical release buffer and verify the exact public `main` SHA and submission form before cutoff. Documentation and a brief explanation are built into each checkpoint.
