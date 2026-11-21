@@ -297,6 +297,27 @@ The 'losses' column sums losses in all-in showdowns where the final commitment o
 - **Submission:** Public `main` still contains the original template bot, not V3.4. Strategy branch commits alone are **not a tournament submission**.
 - **Independent verification limit:** GitHub confirms branch ancestry and file changes; the 32/37 unit tests, official validator, freezeouts and benchmark metrics were reported by Codex and have not been rerun through GitHub.
 
+## Multi-agent development — Claude TASK-CLAUDE-002 benchmark harness (November 21, 2026)
+
+**Status:** Claude/Alwaleed reports local completion of TASK-CLAUDE-002 on `alwaleed/exploit-and-testing` but **not yet committed or pushed**. The primary teammate uploaded `paired_eval.py`, its `README.md`, `test_paired_eval.py`, example match/pair CSVs, example manifest, and example summary for independent coordinator review. These artifacts are **not yet claimed to exist on GitHub**.
+
+**What Claude built (development/testing only, no UO-Monte strategy edits):**
+- `benchmarks/paired_eval.py`: runs each seed in both seat orders using official `play.py`; records raw match outcomes, duplicate-pair W/D/L, per-seat results, timeouts/errors/restarts, command provenance, core and bot fingerprints, deterministic results digest, and uncertainty estimates.
+- `tests/test_paired_eval.py`: pair-seat mapping, scoring, incomplete/error cases, deterministic output, seed guard, statistics and a real-match smoke test.
+- `benchmarks/README.md`: commands, scoring convention, output formats, Docker instructions and limitations.
+- **Sealed seeds 1001–1200 blocked by default**, with an explicit override reserved for the human-approved final evaluation.
+
+**Claude-reported verification:** 25/25 self-tests on its own machine and sandbox; seeds 41–43 of Caller versus Template, two seats each, produced **six completed matches, three duplicate pair losses for Caller, zero reported errors/timeouts/restarts**. This is a harness sanity test, **not evidence that UO-Monte is stronger**. The same deterministic result digest was reported on both machines: `aec473398f4afab7a569d8bcda43d4d659ddda19f0a311bd26059ceca10cc034`.
+
+**Independent source inspection and limited local replay:** The uploaded sample `matches.csv` produced the same deterministic SHA-256 digest; after parsing `seed` and `a_seat` as integers, its three pair losses and published `pairs.csv` agree with the example manifest. The isolated Python test suite ran **25 tests with 24 passing and one live match skipped** because `play.py` was unavailable here. This does **not** independently confirm the six live matches or Docker behavior.
+
+**Review findings for TASK-CLAUDE-003:** 
+1. Rescoring archived CSV rows without converting the `a_seat` column from string to integer can silently overwrite a pair's seat entry and output the wrong result. Add a typed CSV loader and regression test.
+2. A nonzero `play.py` process exit should be explicitly recorded as a problem or incomplete even if a `match_end` event happened to be written.
+3. The claim that Wilson match-rate intervals are necessarily conservative under paired seats is unsupported; pair-cluster inference (bootstrap at seed/pair level) is preferable. The tool's 0.5 draw weighting is correctly labelled a **team summary convention**, not confirmed tournament ranking policy.
+
+**Division of labor:** Codex continues **V3.5 selective semi-bluffs and fold equity** on `feature/strategy`; Claude's next assignment is separate benchmark quality and independent practice opponents. The two AIs coordinate by reading `main/HANDOFF.md` and exchanging reports through the humans. Neither agent may merge to `main` or publish code without human authorization.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
