@@ -33,6 +33,21 @@ python3 play.py my_bots/uo_monte bots/caller --seed 7
 
 **Next gate:** Implement the first heads-up strategy enhancement on a feature branch, test it across repeated matched seeds and both seats, and re-run the validator before considering a merge to `main`.
 
+## First upgraded preflop result — November 21, 2026
+
+A **locally edited, not-yet-committed** `feature/strategy` version of UO-Monte passed the organizer's validator (four supplied cases) and then won a seed-7 freezeout match against `bots/caller`.
+
+```bash
+make validate BOT=my_bots/uo_monte
+python3 play.py my_bots/uo_monte bots/caller --seed 7
+```
+
+- **Validator:** PASSED (the provided preflop, postflop, river and short-stack scenarios).
+- **Match result:** `uo_monte` 20,000 chips; `caller` 0; **148 hands**; no errors/timeouts shown.
+- **Prior organizer-template baseline:** same seed 7 vs caller lost after 134 hands.
+- **Evidence limitation:** one seed is not a meaningful performance estimate, and the upgraded strategy code is **only in the local Codex working tree**, not GitHub yet. The original starter bot remains on `main`.
+- **Next test:** multiple seeds with seat orders swapped. Check win rate, invalid actions, errors, timeouts and average decision time. Review the diff before committing.
+
 ## Checklist
 
 - [ ] Warmup returns safely.
