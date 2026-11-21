@@ -628,6 +628,35 @@ Aggregates standard vs the **five TASK-006 generated bots:** **156/400** match w
 **NEXT guidance for TASK-CODEX-009 / V5:** Claude's corrected priority order is (A) *conservative opponent-conditional river overbet defense* using only observable match-local histories and no hidden-card oracle, (B) *selective preflop 3bet/4bet value/semi-bluffs* / sizing sensitivity against pressure with an explicit range-risk model, (C) selective responses to value-only checkraises. Earlier hypothesis “fold less preflop” and “all flop floats are bad” is superseded. Have Codex finish its current ablations if already underway; **do not interrupt work or discard research**, but evaluate these corrections before freezing/releasing any candidate. Test vs pressure, bluffer_high and **rangebot**, plus old Caller/Aggressive/Tight/Mixed and value-only Trapper. **No V5 test has yet been performed by Claude** (frozen V5 unavailable). No official Docker sandbox proof. No performance guarantee on actual opponent field, and no release without separate human approval. Public `main` remains validated V3.4 at exact Git blob `27acb669ee3ac35172a88293c198182b56db0f78`.
 
 
+## TASK-CODEX-009 — V5-P and V5-F matched-seat assessment (November 21, 2026)
+
+**Source:** Human screenshots of Codex CLI TASK-CODEX-009 completion (worked 19m34s, timestamp roughly 15:42 EST). **Coordinator has not received or independently replayed** the underlying local match logs, patch files, SHA-256 manifest, or individual action traces. Data below faithfully reflects the screenshots; no claimed verification beyond GitHub/public bot state.
+
+**Recommendation:** **DO NOT PROMOTE V5-P OR V5-F**. Public `main` remains byte-identical to previously validated V3.4 `a5ea561` (blob `27acb669ee3ac35172a88293c198182b56db0f78`). No Git commit, push, merge, release was performed by Codex. Previous experiments/snapshots remain preserved. No V5-PF combination or change to river policy was justified.
+
+**Matched seat / exact-deal comparison:** Ten-opponent field, rising blinds except Floorfix (flat 50/100). Each block = **400 matches per version**, **200 duplicate seat-swapped pairs**.
+
+| Seed block | V3.4 (wins / pair W-D-L) | V5-P (wins / pair W-D-L) | V5-F (wins / pair W-D-L) |
+|---|---|---|---|
+| Dev 721–740 | **250/400 · 72/106/22** | **250/400 · 71/108/21** | **248/400 · 69/110/21** |
+| Frozen holdout 741–760 | **233/400 · 67/99/34** | **228/400 · 64/100/36** | **235/400 · 71/93/36** |
+| **Combined 800/version** | **483/800** | **478/800** | **483/800** |
+
+Against **established holdout** opponents only (200 matches): V3.4 **145**, V5-P **141**, V5-F **148**. Against **five TASK-006 stress opponents** (200): V3.4 **88**, V5-P **87**, V5-F **87**. V5-F gained two each vs Tight and Floorfix, lost one vs Mixed, and tied vs Aggressive and Caller; mixed results. **Caution:** Overall V5-F holdout +2 wins is far too weak and inconsistent to justify release or claim statistical superiority.
+
+**Preflop V5-P:** Position-specific opponent ranges, pot odds, effective stack and contestable-pot calculations changed actions. TASK-006 pressure holdout: BB fold to **2.2BB open** reduced from **660/1,241** to **366/1,225**, fold vs 3bet reduced **187/300** to **157/297**, and pressure match wins **16/40 to 18/40**. Yet holdout full field fell five wins and established opponents lost four. This suggests better 2.2BB defense against one generated threat does **not** generalize; focus future investigations on **short-stack and covered-all-in price/coverage vs deep-stack indiscriminate range widening**, and selective positional reraises, not blanket lowering of fold thresholds.
+
+**Postflop V5-F:** Re-evaluates flop/turn calls using range-conditioned equity, board texture, draws, position and future betting. TASK-006 holdout had **101 flop calls** and **164 turn calls** changed to folds; **turn-call investment reduced 764,387 → 617,869 chips**; proportion of flop-called hands ending in a later fold changed **52.2% → 52.9%** (no realized improvement in the intended causal metric). Against Aggressive one first-divergence fold saved **7,836 chips**, another cost **6,541** compared with V3.4's winning line. No demonstrated generalizable continuation improvement; more folds alone are not a goal.
+
+**Important benchmark protocol correction:** TASK-006 generated opponents hash hand IDs, and the earlier benchmark runner embedded the **hero's version name in the hand ID**, which changed opponent actions and violated exact-match paired-deal comparison across versions. Codex **preserved the flawed original results but EXCLUDED them**, then reran both frozen variants using **V3.4's exact hand IDs**. Corrected logs reportedly passed public-state replay and matched-deal checks. Whenever reusing TASK-006 generated opponents, **require stable canonical hand identifiers independent of hero version**; same seed and seat alone are insufficient to establish equivalent stochastic opponent action paths. Candidate differences may still influence action history legitimately.
+
+**Validation:** Python **3.10.22** with `eval7`. V5-P **42/42 tests** and V5-F **43/43 tests**, and official `make validate` passed for V3.4, both candidates and five TASK-006 opponent bots. Codex reported **2,616 valid matches**, **zero errors/timeouts/restarts**. Local p95/max decision times: V3.4 **3.405 / 56.391 ms**, V5-P **6.435 / 58.609 ms**, V5-F **5.978 / 60.113 ms**. Different parallel-worker concurrency means pooled latency isn't a strict A/B benchmark. **Docker restricted CPU/memory sandbox not tested** (unavailable). Source and tests for V5-P/F reconstructed byte for byte from patches per Codex; manifest SHA list exists locally but not yet uploaded.
+
+**TASK-CLAUDE-007-informed follow-up:** The leading *testable* opportunity is conservative **opponent-conditional river overbet defense** using only public match actions, not oracle opponent hole cards or fixed adversary-name rules. Versus a highly bluff-heavy bot, V3.4 folded 106 overbets that an offline oracle estimated would have been profitable calls; vs value-heavy rangebot, folding comparable 104 spots was strongly correct. Identifying these cases online is hard and should be backed by calibrated observable evidence, Bayesian shrinkage and a safe default, especially if public history has only sparse villain showdowns. Second possible independent lane: **selective 3bet/4bet pressure** based on credible range/sizing/stack EV, not automatic extra aggression. Preserve previous V4 opponent tracker as research; it lost on prior holdouts and its raise-EV model mishandled reraises. Do not casually integrate it wholesale.
+
+**Release condition:** After legal-action/validator/latency and materially diverse matched-seat improvements on frozen holdouts, human explicitly approves any publication. Keep `main` V3.4. Registration form completion remains unverified unless human confirms. Deadline **6:30 PM Eastern**. Preserve sealed seeds **1001–1200**.
+
+
 ## Checklist
 
 - [ ] Warmup returns safely.
