@@ -1,30 +1,50 @@
-# Event specification
+# Confirmed event specification
 
-**Fill this in from the organizers' official rules and starter code. Do not assume any unconfirmed detail.**
+Source: [official organizers' README](official-starter-kit.md).
 
-| Question | Confirmed answer / source |
+| Topic | Confirmed rule |
 |---|---|
-| Poker variant and betting structure | TBD |
-| Number of players per table | TBD |
-| Starting stacks, blinds, antes | TBD |
-| Decision interface (function/signature) | TBD |
-| Legal actions and sizing rules | TBD |
-| Runtime, language and dependency limits | TBD |
-| Memory available between decisions/hands | TBD |
-| Score and ranking criteria | TBD |
-| Submission format and deadline | TBD |
-| Rules on external code, AI assistance and packages | TBD |
+| Game | Heads-up No-Limit Texas Hold'em |
+| Tournament | Duplicate paired freezeouts (same cards, seats swapped); round robin; top four knockout |
+| Starting stack | 10,000 each |
+| Blinds | Rise every 20 hands: 25/50, 50/100, 75/150, 100/200, 150/300, then levels with antes |
+| Language | Python 3.10 |
+| Entry point | `my_bots/<team_name>/bot.py` exposing `decide(game_state: dict) -> dict` |
+| Actions | `fold`, `check`, `call`, `raise` (total street bet amount), `all_in` |
+| Time | 2,000 ms per decision; timeouts/crashes fold that action |
+| Compute | 0.5 CPU core and 768 MB memory in sandbox |
+| Imports | Python 3.10 standard library, `eval7`, `numpy`, `scipy`, `treys`, `scikit-learn` |
+| Data | `bot.py` <= 5 MB; optional `data/` <= 200 MB, total <= 250 MB; data read at import time; no Python files in data |
+| History | Module memory for one match; `match_action_log` last 200 actions, including showdown cards |
+| Submission | Public `main` at deadline; exact registered team-name folder, lowercase letters/digits/underscores |
+| Validation | `make validate BOT=my_bots/<team_name>` |
 
-## Initial code inspection
+## API contract
 
-- [ ] Run the organizer's starter agent unchanged.
-- [ ] Locate the entry point that requests an action.
-- [ ] Record a representative sanitized game-state input.
-- [ ] Record all valid output formats, including raise sizes.
-- [ ] Determine whether game history or persistent state is available.
-- [ ] Locate reference agents and simulation/match tools.
-- [ ] Check the official examples and failure behavior.
+```python
+{"action": "fold"}
+{"action": "check"}
+{"action": "call"}
+{"action": "raise", "amount": 1200}  # TOTAL bet committed this street
+{"action": "all_in"}
+```
 
-## Open questions
+Watch out: `check` while facing a bet becomes a **call**; `call` with nothing owed becomes a check. Undersized raises are adjusted to the minimum and unaffordable raises become all-in. Use `can_check`, `amount_owed`, `current_bet`, `min_raise_to`, `your_bet_this_street`, `your_stack`.
 
-Add questions here as they come up; resolve them with the official materials.
+Game-state keys: `your_cards`, `community_cards`, `street`, `pot`, `your_stack`, `your_bet_this_street`, `amount_owed`, `can_check`, `current_bet`, `min_raise_to`, `your_bot_id`, `seat_to_act`, `button_seat`, `sb_seat`, `bb_seat`, `blinds`, `players`, `hand_num`, `hand_id`, `action_log`, `match_action_log`, `time_limit_ms`.
+
+Before hand 1 the engine calls `decide({"type":"warmup"})`; use for initialization. Showdown cards are revealed only for players who reach showdown. Track opponent `bot_id` rather than seat. `pot` includes current bets.
+
+## Restrictions
+
+No network or external LLM calls during play; no file writes, subprocesses, shell commands, background compute after return, reflection with `eval`/`exec`/`compile`/`__import__`, peeking at opponents' code/cards, or collusion. Use the official validator.
+
+## Ranking and prizes
+
+Qualification is decided by pairing wins/draws; top four advance to knockout. The $750 prize pool also includes judged exploitative/game-theoretic strategies and measured bluffing, seven-two, comeback, and lowest-winning-showdown categories. See original README for exact metrics and minimum thresholds.
+
+## Still requires confirmation
+
+- Exact coding and submission cutoff time.
+- Team name as entered on submission form.
+- Whether using AI assistance **during development** is permitted; this is distinct from the explicitly forbidden in-game LLM API calls.

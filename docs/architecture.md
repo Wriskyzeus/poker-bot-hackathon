@@ -1,47 +1,25 @@
-# Architecture
+# Tournament-compatible bot architecture
 
-Keep the decision policy independent from the tournament interface so the bot can be tested locally.
+Only `my_bots/<team_name>/bot.py` and optional `data/` are submitted. Keep any runtime helpers in that bot file or otherwise conform to the submission contract. Don't modify `pokercore/` or rely on modules from `src/` that won't be collected.
 
 ```text
-Official game state
-        |
-        v
-Input adapter and validation
-        |
-        v
-Context (hand, board, stacks, pot, position, history, legal moves)
-        |
-        +--> Preflop policy / hand evaluation
-        +--> Equity estimation (if feasible)
-        +--> Opponent tendencies (if history available)
-        +--> Pot odds, EV, and sizing
-        |
-        v
-Decision policy
-        |
-        v
-Legal action / amount validation
-        |
-        v
-Official game engine
+game_state dictionary / warmup
+          |
+          v
+read street, cards, pot, stack, button, blinds, bet and history
+          |
+          +--> heads-up preflop ranges and effective stack in bb
+          +--> postflop equity (eval7 / treys as permitted)
+          +--> pot odds and legal total-street sizing
+          +--> opponent stats from match_action_log
+          |
+          v
+decision policy, measured against 2-second budget
+          |
+          v
+return legal {"action": ..., "amount": ... if raising}
 ```
 
-## Responsibilities
+**Key details:** Button is small blind and acts first preflop; the big blind acts first postflop. Blinds rise every 20 hands. `pot` already includes wagers this street; `raise.amount` is the total bet on this street, not raise-by. `check` while owing money will call, so never use it as a fallback in that case. Use warmup to initialize safely, and seeded `random`/NumPy for reproducible decisions.
 
-**Integration owner:** Map official input/output types, legal action constraints, safe fallback, submission format, and runtime.
-
-**Strategy owner:** Implement preflop rules, showdown equity/pot-odds calculations, and opponent adaptation only where justified by the rules and test data.
-
-Both owners share test cases and review changes before merging.
-
-## Implementation priorities
-
-1. Agent always returns a valid action.
-2. Starter bot can complete a full game/match.
-3. Basic strategy improves on the organizer baseline.
-4. Equity and sizing enhancements pass benchmarks.
-5. Opponent adaptation is added only if data and runtime allow it.
-
-## Decisions pending official rules
-
-Programming language, entry point, data structures, libraries, multiprocessing, state persistence, simulation budget, and game variant are all TBD.
+**Work split:** Integration teammate focuses on the engine's contract, action legality, runtime, sandbox and submission. Strategy teammate focuses on preflop policy, equity, betting and adaptation. Both evaluate benchmarks and review changes.

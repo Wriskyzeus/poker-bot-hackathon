@@ -1,23 +1,45 @@
-# Poker Bot Hackathon
+# Poker Bot Hackathon — IEEE uOttawa × LARUS
 
-A two-person poker bot project for the IEEE uOttawa × LARUS hackathon.
+Two-person Python poker-bot project for the November 21, 2026 hackathon.
 
-The goal is to build a reliable decision-making agent, test it against baseline strategies, and improve its performance during the competition. The exact game variant, starter-code interface, rules, and submission requirements will be confirmed at the event.
+**Game:** heads-up No-Limit Texas Hold'em, freezeout matches, rising blinds and antes. **Runtime:** Python 3.10; 2 seconds per decision, 768 MB RAM, 0.5 CPU core. **Competition:** duplicate-seated qualification pairings followed by a top-four heads-up knockout.
 
-## Where to start
+## Start here
 
-1. Read [Hackathon checklist](docs/hackathon-checklist.md) on arrival.
-2. Record the official rules in [Event spec](docs/event-spec.md).
-3. Follow [Team workflow](docs/team-workflow.md) to divide work without merge conflicts.
-4. Use [Architecture](docs/architecture.md) and [Strategy](docs/strategy.md) as implementation guides.
-5. Run and compare bots using the plan in [Testing](docs/testing.md).
+This repo incorporates the [official organizer starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit): actual tournament engine (`pokercore/`), bot template (`bots/template/`), reference caller (`bots/caller/`), runner (`play.py`), validator, and pinned dependencies. **Don't edit `pokercore/`.**
 
-## Working agreement
+An unchanged template bot is at **`my_bots/poker_bot_hackathon/bot.py`**. The `poker_bot_hackathon` name is **provisional**. The submission folder **must equal your registered team name** (lowercase letters, digits, underscores). Rename it before submitting if necessary.
 
-- Keep `main` runnable and submission-ready.
-- Make changes on feature branches and merge tested work.
-- Start with the supplied starter code; don't rebuild a game engine unnecessarily.
-- Prefer a legal, reliable action over a sophisticated calculation that might time out.
-- Follow the event's policies on prewritten code, outside packages, and AI assistance.
+### Run locally — Windows
 
-**Status:** planning scaffold only. No runnable competition bot is included yet.
+The organizers recommend **WSL Ubuntu**; commands below are for a Linux shell, not PowerShell. Install `git`, `make`, `build-essential` and the [uv Python manager](https://docs.astral.sh/uv/) if needed.
+
+```bash
+git clone https://github.com/Wriskyzeus/poker-bot-hackathon.git
+cd poker-bot-hackathon
+uv python install 3.10
+uv venv --seed -p 3.10 .venv
+source .venv/bin/activate
+make install
+python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7
+make validate BOT=my_bots/poker_bot_hackathon
+```
+
+For verbose play: `python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --show`. For full sandbox testing: `make sandbox`, then `python3 play.py my_bots/poker_bot_hackathon bots/caller --docker` (requires Docker).
+
+### Project documents
+
+- [Rules and API](docs/event-spec.md) · [Day checklist](docs/hackathon-checklist.md)
+- [Architecture](docs/architecture.md) · [Strategy](docs/strategy.md)
+- [Testing](docs/testing.md) · [Team workflow](docs/team-workflow.md)
+- [Original organizers' README](docs/official-starter-kit.md) · [Research references](docs/resources.md)
+
+## Submission
+
+Only `my_bots/<exact_team_name>/` is collected, with `bot.py` and optional `data/`. Validate with `make validate BOT=my_bots/<exact_team_name>`, complete the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform), and commit the final bot to **public `main` before the organizers' deadline**. The exact cutoff time has not yet been confirmed.
+
+## Development rules
+
+Keep `main` runnable. Use `feature/strategy`, `feature/engine-integration`, `feature/benchmarking` for experimental work. The validator restricts imports, file writes, network calls, background work and other sandbox operations. **Only the chosen bot folder is shipped; do not depend on local `src/` helpers outside that folder.**
+
+The kit is copied from [FreddyyAndrews/poker-hackathon-kit](https://github.com/FreddyyAndrews/poker-hackathon-kit) under its MIT `LICENSE`. The starter bot is unchanged; no benchmarks or performance improvements are claimed yet.

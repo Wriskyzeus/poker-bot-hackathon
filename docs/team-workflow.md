@@ -1,37 +1,22 @@
-# Two-person workflow
+# Two-person Git workflow
 
-## Branches
+- `main`: tested submission code.
+- `feature/engine-integration`: entry-point validation, runtime, imports and sandbox.
+- `feature/strategy`: algorithm changes in `my_bots/<team_name>/bot.py`.
+- `feature/benchmarking`: extra local tests and match reports, which are not submitted.
 
-- `main` — tested, stable work.
-- `feature/engine-integration` — starter-code integration, action validation, game-state adapter.
-- `feature/strategy` — decision rules, equity, opponent modeling.
-- `feature/benchmarking` — test agents, reproducible matches, reports.
-
-## Start of work
-
-```powershell
+```bash
 git clone https://github.com/Wriskyzeus/poker-bot-hackathon.git
 cd poker-bot-hackathon
 git fetch origin
-git switch feature/engine-integration   # or the branch you own
-git pull --ff-only
-```
-
-## Save changes
-
-```powershell
-git status
+git switch feature/strategy
+git merge origin/main
+# edit / test
 git add .
-git commit -m "Implement legal action validation"
+git commit -m "Improve heads-up preflop policy"
 git push -u origin HEAD
 ```
 
-Open a pull request into `main`. Ask the other teammate to review. Merge only when it runs correctly.
+Create pull requests into `main`. Keep at least one baseline that passes validation. To prevent merge conflicts, coordinate ownership of `my_bots/<team_name>/bot.py`; the other teammate can own benchmarking and analysis. Don't both change one function simultaneously.
 
-## Avoid collisions
-
-- Integration owner: official engine files, state adapter, output validation.
-- Strategy owner: decision policy, equity and opponent-model modules.
-- Benchmark owner: shared responsibility, or whoever is not integrating.
-- Do not both edit the same starter-code file simultaneously unless pairing.
-- Keep external engines and third-party bots separate; honor competition rules and licenses.
+**Important:** only the bot's exact matching team-name folder is collected. `src/` and `tests/` are local tools and not packaged. Never modify `pokercore/`.

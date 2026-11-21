@@ -1,35 +1,28 @@
-# Testing and benchmarks
+# Testing and benchmarking
 
-## First tests
+Use **organizer's own** `play.py`, not other Fullhouse implementations.
 
-- [ ] A baseline bot completes a hand without exceptions.
-- [ ] Legal fold/check/call/raise cases return legal actions and amounts.
-- [ ] Zero-cost check is handled correctly.
-- [ ] Short stacks and all-in cases are handled.
-- [ ] Missing history / empty board / final street are handled.
-- [ ] Decision time remains below the official limit.
-- [ ] Full match runs from start to finish.
+```bash
+make install
+python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7
+python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --show
+python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7 --log match.jsonl
+make validate BOT=my_bots/poker_bot_hackathon
+make sandbox
+python3 play.py my_bots/poker_bot_hackathon bots/caller --docker
+```
 
-## Benchmarks
+Replace provisional team name in commands when confirmed. `make sandbox` / `--docker` require Docker; `make validate` does not.
 
-Use the official engine whenever possible. Record:
-- Game variant, score metric, number of hands/matches.
-- Agent version / commit SHA.
-- Opponent name / version.
-- Random seed(s) and seat assignments (swap seats when possible).
-- Runtime, errors, invalid actions, and timeouts.
-- Mean score and uncertainty across batches, not just one lucky result.
+## Checklist
 
-### Experiments
+- [ ] Warmup returns safely.
+- [ ] Valid actions and total-street raise amounts; never checks when it owes money.
+- [ ] Handles short stacks, all-ins, empty preflop board and final street.
+- [ ] No non-allowlisted modules or forbidden behavior.
+- [ ] Under 2 seconds on half a CPU core, not just your laptop.
+- [ ] Full freezeout completes with no errors/timeouts.
+- [ ] Reproducible matched seeds and swapped seats.
+- [ ] Validator passes on exact final submission folder.
 
-1. Baseline vs organizer reference agent.
-2. Baseline vs passive caller.
-3. Baseline vs aggressive agent.
-4. Equity model vs baseline on matched deals/seeds.
-5. Opponent adaptation vs nonadaptive policy.
-
-Do not claim a strategy is stronger from a handful of hands.
-
-## Stable submission
-
-Always keep the most recently tested, valid bot on `main`. Experiment in dedicated branches and merge only after a working match.
+Record match seeds, commit SHA, opponent, seat, outcomes, errors/timeouts, and average think time. Qualification is based on duplicate pairing wins/draws, not fixed-hand bb/100. Keep a known-good bot on `main`.

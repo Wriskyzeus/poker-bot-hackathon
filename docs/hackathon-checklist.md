@@ -1,28 +1,25 @@
-# Hackathon quick start
+# Hackathon day checklist
 
-## First 15 minutes
+- [ ] Confirm exact registered team name and submission cutoff; rename `my_bots/poker_bot_hackathon/` if needed.
+- [ ] Confirm whether AI-assisted **development** is allowed.
+- [ ] Install WSL Ubuntu / build-essential / git / make if on Windows; prepare Python 3.10 using uv.
+- [ ] Run `make install`, then `python3 play.py my_bots/poker_bot_hackathon bots/caller --seed 7`.
+- [ ] Run `make validate BOT=my_bots/poker_bot_hackathon`.
+- [ ] If possible build Docker sandbox and run `--docker`.
+- [ ] Enter team name and repository URL on the [submission form](https://docs.google.com/forms/d/e/1FAIpQLScV6yLoWM0q7Lk-zqzqdfnfFYoZOYSK2VqGXTcsKB445uebsQ/viewform).
 
-- [ ] Confirm event rules, permitted dependencies, and submission cutoff.
-- [ ] Update [event-spec.md](event-spec.md).
-- [ ] Clone this repository and run `git status`.
-- [ ] Install only the required official dependencies.
-- [ ] Run the supplied starter bot unchanged and verify a complete match.
-- [ ] Agree which teammate owns integration and which owns strategy.
+## Implement in order
 
-## Coding order
+1. Reliable legal output within 2 seconds.
+2. Heads-up preflop and effective-stack rules.
+3. Postflop equity/pot-odds calculation.
+4. Opponent-model improvements.
+5. Repeatable benchmark runs and speed checks.
 
-1. Make the official entry point return valid actions for all common states.
-2. Add tests for action legality and edge cases.
-3. Establish baseline match scores.
-4. Implement preflop and postflop improvements one at a time.
-5. Benchmark each improvement using repeatable seeds.
-6. Preserve a known-good submission version before the cutoff.
+## Before cutoff
 
-## Before submitting
-
-- [ ] Confirm correct branch, file paths, and entry-point signature.
-- [ ] Check no unused or unauthorized dependencies.
-- [ ] Run a complete match using the official engine.
-- [ ] Check timeout, crash, invalid action and bet-size cases.
-- [ ] Record the final commit SHA.
-- [ ] Follow the official submission instructions.
+- [ ] Entry at `my_bots/<registered_team_name>/bot.py`, plus only allowed optional data.
+- [ ] No dependence on `src/` files or altered `pokercore/`.
+- [ ] Run validator and one full match; Docker sandbox if possible.
+- [ ] Final code merged to **public main** and pushed before cutoff.
+- [ ] Folder name equals submission form; record final commit SHA.

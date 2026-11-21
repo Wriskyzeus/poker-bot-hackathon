@@ -8,14 +8,12 @@ venv/
 .ruff_cache/
 .coverage
 htmlcov/
-
-# Editors / operating systems
+# Editors / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Local-only and generated output
+# Local results
 .env
 .env.*
 !.env.example
@@ -23,5 +21,6 @@ logs/
 results/
 artifacts/
 *.log
+*.jsonl
 *.db
 *.sqlite3
