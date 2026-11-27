@@ -1,129 +1,132 @@
 <div align="center">
 
 # UO-Monte
-### An autonomous heads-up poker agent
 
-**Heuristic decision-making · Monte Carlo equity · Opponent-aware play**
+### Autonomous heads-up Texas Hold'em agent
 
-Built by a two-student team at the **University of Ottawa** for the **IEEE uOttawa × LARUS Poker Bot Hackathon · November 2026**
+**Probabilistic simulation · Decision algorithms · Adversarial testing**
+
+Built by a two-student team at the **University of Ottawa** for the **IEEE uOttawa × LARUS Poker Bot Hackathon (November 2026)**.
 
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Texas Hold'em](https://img.shields.io/badge/Game-Heads--Up%20NLHE-303747)](docs/event-spec.md)
-[![Version 3.4](https://img.shields.io/badge/Release-V3.4-176B59)](my_bots/uo_monte/bot.py)
-[![MIT](https://img.shields.io/badge/Starter%20Kit-MIT-737B89)](LICENSE)
+[![Poker](https://img.shields.io/badge/Game-Heads--up%20NLHE-343C51)](docs/event-spec.md)
+[![Release](https://img.shields.io/badge/Tournament%20release-V3.4-168568)](my_bots/uo_monte/bot.py)
+[![License](https://img.shields.io/badge/Starter%20kit-MIT-777777)](LICENSE)
 
-[**Explore the strategy**](docs/strategy.md) · [**Architecture**](docs/architecture.md) · [**Engineering case study**](docs/engineering-case-study.md) · [**Reproduce a match**](#run-it-locally)
+[**Read the case study**](docs/engineering-case-study.md) · [**See the source**](my_bots/uo_monte/bot.py) · [**Explore the architecture**](docs/architecture.md) · [**Run locally**](#getting-started)
 
 </div>
 
 ---
 
-## The project
+## Overview
 
-**UO-Monte** is a self-contained Python agent for **heads-up No-Limit Texas Hold'em**. The tournament engine deals the cards and manages the game; our bot receives the legal, public game state and returns one action at a time—fold, check, call, raise or all-in.
+**UO-Monte** is a self-contained Python agent that plays **heads-up No-Limit Texas Hold'em**. For each decision, the tournament engine supplies the available public game state and the bot chooses a legal action. The challenge: make good decisions without seeing an opponent's cards, within **2 seconds per turn** on a constrained runtime.
 
-The engineering challenge was to make **useful decisions under imperfect information** while respecting strict execution limits. We designed a fast, explainable strategy that combines stack-aware preflop heuristics, simulated hand equity, risk-sensitive betting decisions and conservative opponent adaptation.
+We combined a lightweight **position- and stack-aware preflop policy** with **Monte Carlo showdown-equity estimation**, pot-odds and stack-commitment rules, river-specific value/defense logic, and adjustments based on public opponent actions. The released agent is **rule-based and simulation-assisted**: it does not train during a match or call an external AI service.
 
-> **Final tournament entry:** [`my_bots/uo_monte/bot.py`](my_bots/uo_monte/bot.py) · **V3.4**. This is a tested heuristic agent, **not** a game-theoretically solved system, a trained neural network or a live LLM.
+> **Scope:** The submitted V3.4 bot is an engineering prototype evaluated with controlled practice opponents and the organizer's runtime. It is not a solved poker strategy or an assertion of competitive superiority.
 
-## At a glance
+## What we engineered
 
-| What we built | Why it matters |
+| Component | What it does |
 | :-- | :-- |
-| **Position- and stack-aware preflop policy** | Adjusts starting-hand decisions for blinds, button position, raises and short stacks |
-| **Monte Carlo showdown equity** | Samples legal unseen cards and scores outcomes with `eval7` |
-| **Pot-odds and commitment logic** | Weighs call price, remaining stack, hand strength and betting pressure |
-| **Opponent-aware decisions** | Interprets recent public betting actions without accessing hidden cards |
-| **Tournament-safe execution** | Returns legal actions through `decide(game_state)` within the sandbox budget |
-| **Reproducible evaluation** | Uses seeded, seat-swapped matches and adversarial practice opponents |
+| **Preflop policy** | Scores starting hands and adjusts opens/defense for position, stack depth and raise size |
+| **Monte Carlo evaluator** | Samples unseen cards with `eval7` to estimate showdown equity |
+| **Betting decisions** | Uses pot odds, board strength and stack commitment to weigh calls, folds and value bets |
+| **Opponent evidence** | Uses public actions to make conservative adjustments to defensive decisions |
+| **Reliability layer** | Normalizes legal actions and total-street raise sizing under strict runtime constraints |
+| **Evaluation harness** | Compares candidate policies using repeatable seeds, swapped seats and diverse practice opponents |
 
-## How the agent makes a decision
+### Decision architecture
 
 ```mermaid
 flowchart TD
-    A["Tournament engine<br/>Public game state"] --> B["decide(game_state)"]
+    A["Engine supplies game_state"] --> B["decide(game_state)"]
     B --> C{"Betting street"}
-    C -->|Preflop| D["Hand features · position · stack depth<br/>Open / defend / 3-bet / shove"]
-    C -->|Flop or turn| E["Monte Carlo equity · pot odds<br/>Board and stack commitment"]
-    C -->|River| F["Showdown strength · opponent history<br/>Value bet or defend"]
-    D --> G["Legal action normalization"]
+    C -->|Preflop| D["Hand score + position + stack"]
+    C -->|Flop / Turn| E["Monte Carlo + pot odds + commitment"]
+    C -->|River| F["Range approximation + river value / defense"]
+    D --> G["Legal-action normalization"]
     E --> G
     F --> G
-    G --> H["fold · check · call · raise · all-in"]
+    G --> H["fold / check / call / raise / all-in"]
 ```
 
-The preflop policy is deliberately lightweight. On later streets, `estimate_equity()` samples possible opponent holdings and board runouts; dedicated river logic weighs revealed information and public betting patterns. A legal-action wrapper handles bet sizing and short-stack edge cases.
+[Architecture details](docs/architecture.md) · [Strategy implementation](docs/strategy.md)
 
-**More detail:** [Design and algorithm](docs/strategy.md) · [Component architecture](docs/architecture.md)
+## How we built and evaluated it
 
-## Validation & results
+The project evolved through multiple strategies rather than one fixed implementation. We evaluated changes to preflop defense, opponent modeling, river decisions, betting frequency, value protection and a short-stack pot-odds edge case. The key lesson was that **winning additional chips in isolated hands did not necessarily improve full-match outcomes**.
 
-The release was selected through **matched-deal, swapped-seat freezeout testing**, rather than promoting changes based on isolated hands. Several experimental V4–V6 strategies improved selected situations but failed to establish a reliable gain in overall match outcomes.
+To reduce card-luck bias, we used seeded matchups with swapped seats, kept candidate versions separate and inspected performance against different synthetic playing styles. We retained **V3.4** as the tournament release because later experiments did not establish a consistent improvement in the evaluation field.
 
-| Check | Recorded outcome |
-| :-- | :-- |
-| Official starter-kit validator | **Passed** for V3.4 |
-| V3.4 unit test suite | **37 tests passed** in the recorded release verification |
-| Docker sandbox smoke test | **Passed** — 46-hand freezeout against the reference Caller bot; 20,000 final chips; approximately 2 ms average think time |
-| V6-Protection frozen holdout | V3.4: **63/108** wins vs candidate: **60/108** |
-| Final selection | **V3.4**, preserving the best broadly validated release |
+**Recorded checks:**
 
-**Interpretation matters:** The Docker match is a compatibility smoke test against an intentionally simple reference opponent, **not** a claim of tournament dominance. Holdout results come from a defined synthetic practice-opponent field and do not predict performance against unknown entrants. The final rare all-in price correction also passed validation but changed too few actions to justify promotion.
+- **37 V3.4 unit tests** passed in the release verification.
+- The **official organizer validator** passed.
+- The Docker sandbox image built successfully, and V3.4 completed a **46-hand sandbox freezeout** against the reference Caller, winning the match with approximately **2 ms average decision time**.
+- In one frozen synthetic-opponent holdout, V3.4 won **63/108** matches versus **60/108** for a more aggressive V6-Protection candidate.
 
-[**Read the concise evaluation**](docs/engineering-case-study.md#evaluation-and-release-decision) · [Full experiment record](docs/testing.md)
+**Limitations:** The Caller match is a runtime smoke test, not a performance benchmark. Practice-opponent results are not a measure of strength against an unknown tournament field. The released strategy also uses simplified starting-hand rules and approximate opponent-range estimates. Those limitations informed our technical retrospective and ideas for future work.
 
-## Run it locally
+[**Engineering case study**](docs/engineering-case-study.md) · [**Experiments at a glance**](docs/experiment-index.md) · [**Full chronological test record**](docs/testing.md)
 
-Requires **Python 3.10**, Git, Make and a C toolchain; commands below target Linux or **WSL Ubuntu**.
+## What we learned
+
+- **Algorithm design under uncertainty:** An equity estimate is only an input; choosing an action also requires modeling the opponent's response and the value of future decisions.
+- **Experimental rigor:** Seat-swapped holdouts, ablations and regression tests help identify changes that look promising but do not generalize.
+- **Production constraints:** Decision deadlines, legal-action semantics, short stacks and an isolated Docker runtime are as important as strategic logic.
+- **Engineering trade-offs:** Fast heuristics are easy to test and explain, but richer opponent models and multi-street expected-value analysis would be natural future directions.
+
+## Getting started
+
+Use **Python 3.10** in Linux or WSL Ubuntu with Git, Make and a build toolchain. The project uses the official tournament runner and engine.
 
 ```bash
 git clone https://github.com/Wriskyzeus/poker-bot-hackathon.git
 cd poker-bot-hackathon
 
-# Create/activate a Python 3.10 environment (uv is one option).
 uv python install 3.10
 uv venv --seed -p 3.10 .venv
 source .venv/bin/activate
 
 make install
+python -m unittest discover -s tests -p 'test_*.py' -v
 make validate BOT=my_bots/uo_monte
-python3 play.py my_bots/uo_monte bots/caller --seed 7
+python play.py my_bots/uo_monte bots/caller --seed 7
 ```
 
-To reproduce the **restricted Docker smoke test**, install Docker with WSL integration (if on Windows), then:
+With Docker configured, the same reference matchup can be run in the tournament sandbox:
 
 ```bash
 make sandbox
-python3 play.py my_bots/uo_monte bots/caller --docker --seed 7
+python play.py my_bots/uo_monte bots/caller --docker --seed 7
 ```
 
-The official tournament contract specifies **Python 3.10, 2 seconds per decision, 0.5 CPU core and 768 MB memory**. The organizer's engine, validator and sandbox are provided by the starter kit.
-
-## Repository guide
+## Repository map
 
 ```text
-my_bots/uo_monte/bot.py   Final tournament agent
-tests/                    Bot regression tests
-bots/                     Organizer-provided reference bots
-pokercore/                Organizer-provided engine and sandbox (unmodified)
+my_bots/uo_monte/bot.py   Final submitted policy
+pokercore/                Official game engine, validator and sandbox
+bots/                     Organizer-provided reference opponents
+tests/                    Regression tests
 play.py                   Local match runner
-docs/                     Design, evaluation and historical engineering notes
+docs/                     Architecture, case study, experimental history
 ```
 
-**New here?** Start with the [documentation index](docs/README.md). The [engineering case study](docs/engineering-case-study.md) explains the implementation and trade-offs without requiring you to read the long historical logs.
+[Browse the documentation](docs/README.md) · [Source attribution](docs/upstream-provenance.md)
 
-## Engineering approach & attribution
+## Credits and provenance
 
-This is a **team-built, AI-assisted software engineering project**. We used coding assistants during development; the submitted agent runs locally and uses **no network service or live model**. Testing included independently authored practice opponents, controlled seed/seat comparisons, focused regression tests and failed experiments that we deliberately did **not** ship.
-
-The poker engine, sandbox, templates and example opponents originate from the [official Fullhouse Hackathon starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit), distributed under the [MIT License](LICENSE). The UO-Monte decision policy and associated tests are the team's project work. [Upstream provenance](docs/upstream-provenance.md).
+The two-person team used AI coding assistants to support prototyping, implementation and analysis. The submitted bot runs locally with no external inference. The poker engine, starter template, reference opponents and sandbox were provided by the [official Fullhouse Hackathon starter kit](https://github.com/FreddyyAndrews/poker-hackathon-kit) under its [MIT license](LICENSE). Our team's decision policy and testing work are separate from the organizer's infrastructure.
 
 ---
 
 <div align="center">
 
-**Built to make poker decisions that are fast, legal, measurable and explainable.**
+**A project in probabilistic programming, software validation and engineering judgment under constraints.**
 
-[Implementation](my_bots/uo_monte/bot.py) · [Technical deep dive](docs/engineering-case-study.md) · [Tests](tests/test_uo_monte_bot.py)
+[Case study](docs/engineering-case-study.md) · [Source](my_bots/uo_monte/bot.py) · [Tests](tests/test_uo_monte_bot.py)
 
 </div>
