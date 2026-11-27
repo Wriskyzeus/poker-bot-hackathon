@@ -1,57 +1,50 @@
-# Documentation
+# Documentation guide
 
-A guided tour of UO-Monte's engineering work. The root [README](../README.md) is the **portfolio overview**; these pages provide implementation detail, results and historical context.
+The [root README](../README.md) is the portfolio overview. This directory contains the technical details, a concise experimental index and a preserved chronological development record.
 
-## Start here
+## Recommended reading order
 
-| Read | Content | Audience |
-| :-- | :-- | :-- |
-| [Engineering case study](engineering-case-study.md) | Problem, design decisions, experiments, limitations and release rationale | Recruiters and engineers |
-| [Current strategy](strategy.md) | What V3.4 actually does, including approximations and trade-offs | Poker/algorithm readers |
-| [Architecture](architecture.md) | Public game-state interface, policy layers, constrained execution | Software engineers |
-| [Tournament specification](event-spec.md) | Official runtime requirements, legal actions and submission contract | Reproducers |
-| [Setup / WSL](windows-setup.md) | Windows development environment | Contributors |
-
-## Implementation and evidence
-
-- [Final bot](../my_bots/uo_monte/bot.py) — one self-contained submission file.
-- [Bot regression tests](../tests/test_uo_monte_bot.py) — action legality, behavior and algorithmic edge cases.
-- [Full experiment journal](testing.md) — comprehensive task-by-task development evidence, including rejected variants and local benchmark results. **Long archival log; start with the case study instead.**
-- [Upstream provenance](upstream-provenance.md) — boundary between the organizer kit and team implementation.
-
-## Historical project records
-
-The files below are intentionally preserved as **development history**, not authoritative descriptions of the current released implementation. The active root [HANDOFF](../HANDOFF.md) is now a concise final-state summary.
-
-| Archive | What it records |
+| Page | Purpose |
 | :-- | :-- |
-| [Internal agent handoff archive](archive/development-handoff-2026-11-21.md) | Verbatim record of multi-agent tasks and decisions, preserved for traceability |\n| [Original starter-kit guide](official-starter-kit.md) | Official engine, sandbox, tournament and submission instructions |
-| [V2 equity design brief](v2-monte-carlo.md) | Early Monte Carlo requirements and testing plan |
+| [Engineering case study](engineering-case-study.md) | Project goals, technical decisions, evidence and lessons |
+| [Architecture](architecture.md) | API, code components, execution constraints and data flow |
+| [Strategy and algorithms](strategy.md) | The actual V3.4 preflop, equity and postflop policy |
+| [Experiment index](experiment-index.md) | Short, searchable summary of attempted variants and findings |
+| [Tournament rules](event-spec.md) | Runtime, legal actions and submission contract |
+| [WSL setup](windows-setup.md) | Reproduction instructions for Windows/Linux development |
+
+## Validation and reproducibility
+
+- [Submitted agent](../my_bots/uo_monte/bot.py) and [regression tests](../tests/test_uo_monte_bot.py)
+- [Full testing journal](testing.md) — **long historical record**, retained for traceability rather than quick reading
+- [Release checklist](hackathon-checklist.md) — recorded checks and what they establish
+- [Upstream provenance](upstream-provenance.md) — team policy versus official starter kit
+
+## Preserved project archives
+
+These files document exploratory work, planning and decisions at the time. **They may contain outdated status statements** (for example, earlier mentions of an unsubmitted template). Refer to the main README and the case study for the released implementation.
+
+| Historical resource | Content |
+| :-- | :-- |
+| [Agent coordination archive](archive/development-handoff-2026-11-21.md) | Complete preserved multi-agent handoff and tasks |
+| [V2 Monte Carlo brief](v2-monte-carlo.md) | Early evaluator design goals |
 | [Build milestones](build-milestones.md) | Initial roadmap |
-| [Opponent threat model](opponent-threat-model.md) | Adversarial assumptions and potential strategy risks |
-| [External benchmarking](external-bot-benchmarking.md) | Research notes on independent opponents and measurements |
-| [Open-source research](open-source-strategy-research.md) | Strategy-source and licensing considerations |
-| [Hackathon checklist](hackathon-checklist.md) | Event-day planning and historical checkmarks |
-| [Final-stretch notes](hackathon-final-stretch.md) | Time-sensitive development checklist, now archived |
-| [Team workflow](team-workflow.md) | Development branches and human release-approval process |
-| [Resources](resources.md) | Earlier research links |
+| [Opponent threat model](opponent-threat-model.md) | Practice-opponent hypotheses and risk areas |
+| [External benchmarking](external-bot-benchmarking.md) | Independent benchmarking research |
+| [Strategy and licensing research](open-source-strategy-research.md) | Source audits and reuse concerns |
+| [Event-day notes](hackathon-final-stretch.md) | Historical deadline planning |
+| [Team workflow](team-workflow.md) | Development-branch and review practices |
+| [Original organizer documentation](official-starter-kit.md) | Original kit instructions |
+| [Resources](resources.md) | Earlier references |
 
-> **Historical note:** Some early design briefs refer to a starter template on `main`, planned strategy features or an incomplete submission. Those statements describe earlier checkpoints. The released entry is **UO-Monte V3.4** in [`my_bots/uo_monte/bot.py`](../my_bots/uo_monte/bot.py).
+## Reproducing a minimal verification
 
-## Reproduce the release checks
-
-From the repository root with Python 3.10 dependencies installed:
+With Python 3.10 dependencies installed:
 
 ```bash
+python -m unittest discover -s tests -p 'test_*.py' -v
 make validate BOT=my_bots/uo_monte
-python3 play.py my_bots/uo_monte bots/caller --seed 7
+python play.py my_bots/uo_monte bots/caller --seed 7
 ```
 
-For the Docker smoke test, with a working Docker daemon:
-
-```bash
-make sandbox
-python3 play.py my_bots/uo_monte bots/caller --docker --seed 7
-```
-
-The team previously completed the Docker smoke successfully on the release candidate. These commands describe how to **reproduce** the checks, not results from a new run.
+For the isolated engine run, see the [Docker instructions](../README.md#getting-started). These commands are provided for reproducibility, not evidence of a fresh test execution.
